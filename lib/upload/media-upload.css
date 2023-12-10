@@ -1,0 +1,26 @@
+.upload_button, .remove_button, .upload_input {
+  vertical-align: bottom !important;
+}
+
+.dc-wp-fields-uploader img {
+  margin-right: 5px;
+  border-radius: 5%;
+  -moz-border-radius: 5%;
+  -webkit-border-radius: 5%;
+  -nsborder-radius: 5%;
+  border: 2px solid #dfdfdf;
+}
+
+.dc-wp-fields-uploader img.placeHolder {
+  background: url('images/Placeholder.png');
+  background: url(images/Placeholder.png) no-repeat center center / 75px 75px;
+  webkit-background-size: cover;
+  moz-background-size: cover;
+  o-background-size: cover;
+  background-size: cover;
+  filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='images/Placeholder.png', sizingMethod='scale');
+  -ms-filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='images/Placeholder.png', sizingMethod='scale');
+  width :75px;
+  height: 75px;
+  display: inline-block;
+}

@@ -1,0 +1,6 @@
+/*!
+ * @license MIT
+ * @name vlitejs
+ * @version 4.1.1
+ * @copyright 2022 Joris DANIEL
+ */.v-captions{background-color:#212121;border-radius:5px;bottom:70px;color:#fff;display:none;left:50%;padding:5px 10px;position:absolute;text-align:center;transform:translateX(-50%);width:auto;z-index:2}.v-captions.v-active{display:block}.v-subtitle{height:100%;position:relative}.v-subtitlesList{background-color:#fff;border-radius:5px;bottom:calc(var(--vlite-controlBarHeight) + 10px);left:50%;opacity:0;position:absolute;transform:translateX(-50%);transition:opacity var(--vlite-transition),visibility var(--vlite-transition);visibility:hidden;z-index:3}.v-subtitlesList.v-active{opacity:1;visibility:visible}.v-subtitlesList ul{margin:0;padding:0}.v-subtitlesList li{list-style-type:none}.v-trackButton{appearance:none;background:none;border:none;color:inherit;cursor:pointer;font-family:inherit;font-size:inherit;outline:none;padding:8px 15px 8px 30px;position:relative;text-align:left;transition:background-color var(--vlite-transition);width:100%}.v-trackButton:focus-visible{outline:2px dashed var(--vlite-colorPrimary);outline-offset:2px}.v-trackButton:hover{background-color:#0000000d}.v-trackButton svg{fill:var(--vlite-colorPrimary);display:none;left:5px;position:absolute;top:50%;transform:translateY(-50%);width:20px}.v-trackButton.v-active svg{display:block}

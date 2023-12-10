@@ -1,0 +1,63 @@
+.widefat .column-mvx_suborder mark {
+  display: block;
+  text-indent: -9999px;
+  position: relative;
+  height: 1em;
+  width: 1em;
+  background: 0 0;
+  font-size: 1.4em;
+  margin: 0 auto;
+  float: left;
+  margin-right: 8px;
+  font-size: 1.1em;
+  margin-top: 2px;
+}
+.widefat .column-mvx_suborder mark:after {
+  font-family: WooCommerce;
+  speak: none;
+  font-weight: 400;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  text-indent: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+}
+.widefat .column-mvx_suborder mark.pending:after {
+  content: "\e012";
+  color: #ffba00;
+}
+.widefat .column-mvx_suborder mark.trash:after {
+  content: "\e602";
+  color: #a00;
+}
+.widefat .column-mvx_suborder mark.completed:after {
+  content: "\e015";
+  color: #2ea2cc;
+}
+.widefat .column-mvx_suborder mark.on-hold:after {
+  content: "\e033";
+  color: #999;
+}
+.widefat .column-mvx_suborder mark.failed:after {
+  content: "\e016";
+  color: #d0c21f;
+}
+.widefat .column-mvx_suborder mark.cancelled:after {
+  content: "\e013";
+  color: #a00;
+}
+.widefat .column-mvx_suborder mark.processing:after {
+  content: "\e011";
+  color: #73a724;
+}
+.widefat .column-mvx_suborder mark.refunded:after {
+  content: "\e014";
+  color: #999;
+}

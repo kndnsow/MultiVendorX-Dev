@@ -1,0 +1,6 @@
+/*!
+ * @license MIT
+ * @name vlitejs
+ * @version 4.1.1
+ * @copyright 2022 Joris DANIEL
+ */.v-castButton.v-active svg{fill:var(--vlite-colorPrimary)}.v-deviceName{color:#fff;display:none;font-size:12px;line-height:12px;padding:10px;pointer-events:none;position:absolute;right:0;top:0;width:auto}.v-remote .v-captions,.v-remote .v-fullscreenButton,.v-remote .v-pipButton,.v-remote .vlite-js{display:none}.v-remote .v-deviceName{display:block}

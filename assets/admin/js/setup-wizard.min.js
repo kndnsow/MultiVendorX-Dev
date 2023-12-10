@@ -1,0 +1,1 @@
+jQuery(document).ready(function(i){i("#commission_type").change(function(){i(".mvx_commission_type_fields").hide(),i(i(this).find("option:selected").data("fields")).show()}).change(),i("#mvx_disbursal_mode_admin").change(function(){i(this).is(":checked")?i(i(this).data("field")).show():i(i(this).data("field")).hide()}).change()});

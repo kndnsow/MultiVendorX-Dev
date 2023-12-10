@@ -1,0 +1,16 @@
+{
+  "devDependencies": {
+    "grunt": "^1.6.1",
+    "grunt-checktextdomain": "^1.0.1",
+    "grunt-contrib-cssmin": "^4.0.0",
+    "grunt-contrib-uglify": "^5.2.1",
+    "grunt-rtlcss": "^2.0.2",
+    "grunt-uncss": "^0.10.1",
+    "grunt-wp-i18n": "^1.0.3"
+  },
+  "dependencies": {
+    "autoprefixer": "^10.4.7",
+    "grunt-contrib-uglify-es": "github:gruntjs/grunt-contrib-uglify#harmony",
+    "uglify-js": "^3.16.0"
+  }
+}
