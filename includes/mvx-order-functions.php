@@ -163,7 +163,7 @@ function get_mvx_suborders( $order_id, $args = array(), $object = true ) {
     $args = ( $args ) ? wp_parse_args( $args, $default ) : $default;
     $orders = array();
     $posts = get_mvx_vendor_order_datas( $default );
-    file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":orders:  : " . var_export($posts, true) . "\n", FILE_APPEND);
+    // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":orders:  : " . var_export($posts, true) . "\n", FILE_APPEND);
     foreach ( $posts as $post ) {
         $orders[] = ( $object ) ? wc_get_order( $post->ID ) : $post->ID;
     }

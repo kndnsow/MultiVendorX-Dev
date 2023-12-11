@@ -38,8 +38,10 @@ class MVX_Order {
             add_filter( 'woocommerce_customer_available_downloads', array($this, 'woocommerce_customer_available_downloads'), 99);
             add_action('mvx_frontend_enqueue_scripts', array($this, 'mvx_frontend_enqueue_scripts'));
             if( !is_user_mvx_vendor( get_current_user_id() ) ) {
-                add_filter('manage_woocommerce_page_wc-orders_columns', array($this, 'mvx_shop_order_columns'), 99);
-                add_action('manage_woocommerce_page_wc-orders_custom_column', array($this, 'mvx_show_shop_order_columns'), 99, 2);
+               // add_filter('manage_shop_order_posts_columns', array($this, 'mvx_shop_order_columns'), 99);
+               add_filter('manage_woocommerce_page_wc-orders_columns', array($this, 'mvx_shop_order_columns'), 99);
+               // add_action('manage_shop_order_posts_custom_column', array($this, 'mvx_show_shop_order_columns'), 99, 2);
+               add_action('manage_woocommerce_page_wc-orders_custom_column', array($this, 'mvx_show_shop_order_columns'), 99, 2);
             }
             if(apply_filters('mvx_parent_order_to_vendor_order_status_synchronization', true))
                 add_action('woocommerce_order_status_changed', array($this, 'mvx_parent_order_to_vendor_order_status_synchronization'), 90, 3);
