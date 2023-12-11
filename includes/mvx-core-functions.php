@@ -8532,12 +8532,12 @@ if (!function_exists('get_mvx_vendor_order_datas')) {
     function get_mvx_vendor_order_datas($args) {
         global $wpdb;
         // Get posts using get_posts
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":orders: " . json_encode($args) . "\n", FILE_APPEND);
+        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":arg: " . json_encode($args) . "\n", FILE_APPEND);
         $datas = wc_get_orders($args);
         // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . json_encode($args) . "\n:orders:  : " . (var_export($datas, true)) . "\n\n\n\n\n", FILE_APPEND);
-        if($datas){
+        // if($datas){
             return $datas;
-        }
+        // }
         // If posts are found, return them
         // $return_fuilds = "*";
         // //handle return fields

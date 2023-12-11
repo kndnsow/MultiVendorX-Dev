@@ -155,14 +155,15 @@ function mvx_get_total_refunded_for_item( $item_id, $order_id ) {
  */
 function get_mvx_suborders( $order_id, $args = array(), $object = true ) {
     $default = array(
-        'post_parent' => $order_id,
-        'post_type' => 'shop_order',
-        'numberposts' => -1,
-        'post_status' => 'any'
+        'post_parent' => $order_id->id,
+        // 'post_type' => 'shop_order',
+        // 'numberposts' => -1,
+        // 'post_status' => 'any'
     );
     $args = ( $args ) ? wp_parse_args( $args, $default ) : $default;
     $orders = array();
-    $posts = get_mvx_vendor_order_datas( $args );
+    $posts = get_mvx_vendor_order_datas( $default );
+    file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":orders:  : " . var_export($posts, true) . "\n", FILE_APPEND);
     foreach ( $posts as $post ) {
         $orders[] = ( $object ) ? wc_get_order( $post->ID ) : $post->ID;
     }

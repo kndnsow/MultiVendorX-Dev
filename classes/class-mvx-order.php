@@ -38,8 +38,8 @@ class MVX_Order {
             add_filter( 'woocommerce_customer_available_downloads', array($this, 'woocommerce_customer_available_downloads'), 99);
             add_action('mvx_frontend_enqueue_scripts', array($this, 'mvx_frontend_enqueue_scripts'));
             if( !is_user_mvx_vendor( get_current_user_id() ) ) {
-                add_filter('manage_shop_order_posts_columns', array($this, 'mvx_shop_order_columns'), 99);
-                add_action('manage_shop_order_posts_custom_column', array($this, 'mvx_show_shop_order_columns'), 99, 2);
+                add_filter('manage_woocommerce_page_wc-orders_columns', array($this, 'mvx_shop_order_columns'), 99);
+                add_action('manage_woocommerce_page_wc-orders_custom_column', array($this, 'mvx_show_shop_order_columns'), 99, 2);
             }
             if(apply_filters('mvx_parent_order_to_vendor_order_status_synchronization', true))
                 add_action('woocommerce_order_status_changed', array($this, 'mvx_parent_order_to_vendor_order_status_synchronization'), 90, 3);
@@ -254,7 +254,7 @@ class MVX_Order {
                 if ($mvx_suborders) {
                     echo '<ul class="mvx-order-vendor" style="margin:0px;">';
                     foreach ($mvx_suborders as $suborder) {
-                        $vendor = get_mvx_vendor(get_post_field('post_author', $suborder->get_id()));
+                        $vendor = get_mvx_vendor(get_mvx_vendor_order_data($suborder->get_id(), '_vendor_id' ));
                         $vendor_page_title = ($vendor) ? $vendor->page_title : __('Deleted vendor', 'multivendorx');
                         $order_uri = apply_filters('mvx_admin_vendor_shop_order_edit_url', esc_url('post.php?post=' . $suborder->get_id() . '&action=edit'), $suborder->get_id());
 

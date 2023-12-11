@@ -293,7 +293,7 @@ class MVX_Ajax {
 
         foreach ($vendor_orders as $order_id) {
             $order = wc_get_order($order_id);
-            $vendor_order = mvx_get_order($order_id);
+            $vendor_order = mvx_get_order($order_id->id);
             if ($order) {
                 if(in_array($order->get_status(), array('draft', 'trash'))) continue;
                 $actions = array();
@@ -343,7 +343,8 @@ class MVX_Ajax {
                     'select_order' => '<input type="checkbox" class="select_' . $order->get_status() . '" name="selected_orders[' . $order->get_id() . ']" value="' . $order->get_id() . '" />',
                     'order_id' => $order->get_id(),
                     'order_date' => mvx_date($order->get_date_created()),
-                    'vendor_earning' => ($vendor_order->get_commission_total()) ? $vendor_order->get_commission_total() : '-',
+                    // 'vendor_earning' => ($vendor_order->get_commission_total()) ? $vendor_order->get_commission_total() : '-',
+                    'vendor_earning' => (get_mvx_order_commission_data($order_id->id, '_commission_total')) ? (get_mvx_order_commission_data($order_id->id, '_commission_total')) : '-',
                     'order_status' => esc_html(wc_get_order_status_name($order->get_status())), //ucfirst($order->get_status()),
                     'action' => apply_filters('mvx_vendor_orders_row_action_html', $action_html, $actions)
                         ), $order);
