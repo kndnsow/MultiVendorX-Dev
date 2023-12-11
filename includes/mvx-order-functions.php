@@ -155,7 +155,7 @@ function mvx_get_total_refunded_for_item( $item_id, $order_id ) {
  */
 function get_mvx_suborders( $order_id, $args = array(), $object = true ) {
     $default = array(
-        'post_parent' => $order_id->id,
+        'post_parent' => $order_id->get_id(),
         // 'post_type' => 'shop_order',
         // 'numberposts' => -1,
         // 'post_status' => 'any'

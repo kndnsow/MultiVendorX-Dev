@@ -51,7 +51,7 @@ final class MVX {
     public $vendor_rest_api;
     public $deprecated_hook_handlers = array();
     public $deprecated_funtions;
-
+    public $multivendor_migration;
     /**
      * Class construct
      * @param object $file
