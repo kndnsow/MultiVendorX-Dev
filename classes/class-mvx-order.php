@@ -479,14 +479,12 @@ class MVX_Order {
             );
             $data_new = array(
                 'post_date' => gmdate('Y-m-d H:i:s', $order->get_date_created('edit')->getOffsetTimestamp()),
-                'post_status' => 'wc-' . ( $order->get_status('edit') ? $order->get_status('edit') : apply_filters('mvx_create_vendor_order_default_order_status', 'pending') ),
-                'post_author' => absint($args['vendor_id']),
                 'post_parent' => absint($args['order_id']),
             );
         }
         // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":args: "  . json_encode($args) . "\n id:" . "\n", FILE_APPEND);
         if ($updating) {
-            $vendor_order_id = wp_update_post($data);
+            // $vendor_order_id = wp_update_post($data);
         } else {
             $vendor_order_id = insert_mvx_vendor_order_data($data_new, $order, $args['vendor_id']);
             // $vendor_order_id = wp_insert_post($data, true);
@@ -522,17 +520,17 @@ class MVX_Order {
             }
         }
 
-        if (!empty($wc_checkout)) {
-            foreach ($checkout_fields as $section => $checkout_meta_keys) {
-                if ('account' != $section) {
-                    foreach ($checkout_meta_keys as $order_meta_key => $order_meta_values) {
-                        $meta_key = 'shipping' == $section || 'billing' == $section ? '_' . $order_meta_key : $order_meta_key;
-                        $meta_value_to_save = isset($args['posted_data'][$order_meta_key]) ? $args['posted_data'][$order_meta_key] : get_mvx_vendor_order_data($order->get_id(), $meta_key, true);
-                        update_mvx_vendor_order_data($vendor_order_id, $meta_key, $meta_value_to_save);
-                    }
-                }
-            }
-        }
+        // if (!empty($wc_checkout)) {
+        //     foreach ($checkout_fields as $section => $checkout_meta_keys) {
+        //         if ('account' != $section) {
+        //             foreach ($checkout_meta_keys as $order_meta_key => $order_meta_values) {
+        //                 $meta_key = 'shipping' == $section || 'billing' == $section ? '_' . $order_meta_key : $order_meta_key;
+        //                 $meta_value_to_save = isset($args['posted_data'][$order_meta_key]) ? $args['posted_data'][$order_meta_key] : get_mvx_vendor_order_data($order->get_id(), $meta_key, true);
+        //                 update_mvx_vendor_order_data($vendor_order_id, $meta_key, $meta_value_to_save);
+        //             }
+        //         }
+        //     }
+        // }
         // Add vendor order meta data
         $order_meta = apply_filters('mvx_vendor_order_metas', array(
             '_payment_method',

@@ -28,7 +28,7 @@ function mvx_get_orders($args = array(), $return_type = 'ids', $subonly = false)
 	'order'            => 'DESC',
 	// 'post_type'        => 'shop_order',
 	'post_status'      => array('wc-processing', 'wc-completed'),
-	// 'fields'           => 'ids',
+	'fields'           => 'ids',
     );
     if( $subonly ) {
         $default['meta_query'] = array(

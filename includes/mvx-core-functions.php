@@ -8479,6 +8479,7 @@ if(!function_exists('insert_mvx_vendor_order_data')){
         $order->save();
         //create suborder on mvx_orders table
         global $wpdb;
+        
         $data['ID'] = $order->get_id();
         $table_name = $wpdb->prefix . 'mvx_orders';
         $wpdb->insert($table_name, $data);

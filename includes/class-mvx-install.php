@@ -333,11 +333,11 @@ class MVX_Install {
 
         $create_tables_query[] = "CREATE TABLE IF NOT EXISTS `" . $wpdb->prefix . "mvx_orders` (
             `id` bigint(20) unsigned NOT NULL,
+            `post_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
             `post_parent` bigint(20) NOT NULL DEFAULT 0,
             `_order_key` varchar(100) NOT NULL DEFAULT '',
             `_vendor_id` bigint(20) NOT NULL,
             `_customer_user` bigint(20) NOT NULL,
-            `has_mvx_sub_order` BOOLEAN,
             `_created_via` varchar(100) NOT NULL DEFAULT '',
             `_prices_include_tax` BOOLEAN,
             `_order_currency` varchar(100) NOT NULL DEFAULT '',

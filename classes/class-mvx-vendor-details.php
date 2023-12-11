@@ -604,10 +604,11 @@ public function get_vendor_orders_by_product($vendor_term_id, $product_id, $star
         if ($product_id && $order_id) {
             $commissions = false;
             $args = array(
-                'post_type' => 'dc_commission',
+                // 'post_type' => 'dc_commission',
                 'post_status' => array('publish', 'private'),
-                'posts_per_page' => -1,
-                'order' => 'asc',
+                'fields' => 'ids',
+                // 'posts_per_page' => -1,
+                // 'order' => 'asc',
                 'meta_query' => array(
                     array(
                         'key' => '_commission_order_id',

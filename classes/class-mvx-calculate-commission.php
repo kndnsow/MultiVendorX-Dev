@@ -444,15 +444,24 @@ class MVX_Calculate_Commission {
         if ($vendor_id == 0) {
             return false;
         }
+        // $commission_data = array(
+        //     'post_type' => 'dc_commission',
+        //     'post_title' => sprintf(__('Commission - %s', 'multivendorx'), strftime(_x('%B %e, %Y @ %I:%M %p', 'Commission date parsed by strftime', 'multivendorx'), current_time('timestamp'))),
+        //     'post_status' => 'private',
+        //     'ping_status' => 'closed',
+        //     'post_excerpt' => '',
+        //     'post_author' => 1
+        // );
+        // $commission_id = wp_insert_post($commission_data);
+
         $commission_data = array(
-            'post_type' => 'dc_commission',
-            'post_title' => sprintf(__('Commission - %s', 'multivendorx'), strftime(_x('%B %e, %Y @ %I:%M %p', 'Commission date parsed by strftime', 'multivendorx'), current_time('timestamp'))),
-            'post_status' => 'private',
-            'ping_status' => 'closed',
-            'post_excerpt' => '',
-            'post_author' => 1
+            '_commission_order_id' => $order_id,
+            // 'post_author' => $vendor_id,
+            // '_commission_vendor' => $vendor->term_id,
+            '_paid_status' => 'unpaid',
+            'status' => 'private'
         );
-        $commission_id = wp_insert_post($commission_data);
+        $commission_id = insert_mvx_order_commission_data($commission_data);
         // Add meta data
         if ($vendor_id > 0) {
             update_mvx_order_commission_data($commission_id, '_commission_vendor', $vendor_id);
