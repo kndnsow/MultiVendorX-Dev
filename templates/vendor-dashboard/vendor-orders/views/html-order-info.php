@@ -20,10 +20,9 @@ if ( WC()->payment_gateways() ) {
 } else {
     $payment_gateways = array();
 }
-$address = get_mvx_vendor_order_data(wp_get_post_parent_id($order->get_id()), '_mvx_user_location', true) ? get_mvx_vendor_order_data(wp_get_post_parent_id($order->get_id()), '_mvx_user_location', true) : '';
-$lat = get_mvx_vendor_order_data(wp_get_post_parent_id($order->get_id()), '_mvx_user_location_lat', true) ? get_mvx_vendor_order_data(wp_get_post_parent_id($order->get_id()), '_mvx_user_location_lat', true) : '';
-$lng = get_mvx_vendor_order_data(wp_get_post_parent_id($order->get_id()), '_mvx_user_location_lng', true) ? get_mvx_vendor_order_data(wp_get_post_parent_id($order->get_id()), '_mvx_user_location_lng', true) : '';
-$parent_order = wc_get_order($order->get_parent_id());
+$address = get_post_meta(wp_get_post_parent_id($order->get_id()), '_mvx_user_location', true) ? get_post_meta(wp_get_post_parent_id($order->get_id()), '_mvx_user_location', true) : '';
+$lat = get_post_meta(wp_get_post_parent_id($order->get_id()), '_mvx_user_location_lat', true) ? get_post_meta(wp_get_post_parent_id($order->get_id()), '_mvx_user_location_lat', true) : '';
+$lng = get_post_meta(wp_get_post_parent_id($order->get_id()), '_mvx_user_location_lng', true) ? get_post_meta(wp_get_post_parent_id($order->get_id()), '_mvx_user_location_lng', true) : '';
 ?>
 <div class="panel-body panel-content-padding top-order-note">
     <div class="vorder-info-top-left pull-left">
@@ -76,8 +75,8 @@ $parent_order = wc_get_order($order->get_parent_id());
                 <h3><?php esc_html_e( 'Billing address', 'multivendorx' ); ?></h3>
                 <?php 
                 // Display values.
-                if ( $parent_order->get_formatted_billing_address() ) {
-                        echo '<p>' . wp_kses( $parent_order->get_formatted_billing_address(), array( 'br' => array() ) ) . '</p>';
+                if ( $order->get_formatted_billing_address() ) {
+                        echo '<p>' . wp_kses( $order->get_formatted_billing_address(), array( 'br' => array() ) ) . '</p>';
                 } else {
                         echo '<p class="none_set"><strong>' . __( 'Address:', 'multivendorx' ) . '</strong> ' . __( 'No billing address set.', 'multivendorx' ) . '</p>';
                 }
@@ -91,8 +90,8 @@ $parent_order = wc_get_order($order->get_parent_id());
                 <h3><?php esc_html_e( 'Shipping address', 'multivendorx' ); ?></h3>
                 <?php 
                 // Display values.
-                if ( $parent_order->get_formatted_shipping_address() ) {
-                        echo '<p>' . wp_kses( $parent_order->get_formatted_shipping_address(), array( 'br' => array() ) ) . '</p>';
+                if ( $order->get_formatted_shipping_address() ) {
+                        echo '<p>' . wp_kses( $order->get_formatted_shipping_address(), array( 'br' => array() ) ) . '</p>';
                 } else {
                         echo '<p class="none_set"><strong>' . __( 'Address:', 'multivendorx' ) . '</strong> ' . __( 'No shipping address set.', 'multivendorx' ) . '</p>';
                 }
@@ -107,7 +106,7 @@ $parent_order = wc_get_order($order->get_parent_id());
                 <div class="customer-detail">
                     <?php 
                     $user = $user_id = '';
-                    if ( $parent_order->get_user_id() ) {
+                    if ( $order->get_user_id() ) {
                         $user_id = absint( $order->get_user_id() );
                         $user    = get_user_by( 'id', $user_id );  
                     }

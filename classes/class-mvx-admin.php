@@ -1455,7 +1455,7 @@ class MVX_Admin {
         }
         
         delete_post_meta($order->get_id(), '_commissions_processed');
-        $commission_id = get_mvx_vendor_order_data($order->get_id(), '_commission_id', true) ? get_mvx_vendor_order_data($order->get_id(), '_commission_id', true) : '';
+        $commission_id = get_post_meta($order->get_id(), '_commission_id', true) ? get_post_meta($order->get_id(), '_commission_id', true) : '';
         if ($commission_id) {
             wp_delete_post($commission_id, true);
         }
@@ -1473,12 +1473,12 @@ class MVX_Admin {
             $recalculate = apply_filters( 'mvx_regenerate_order_commissions_by_new_commission_rate', false, $order );
             // Calculate commission
             MVX_Commission::calculate_commission($commission_id, $order, $recalculate);
-            update_mvx_order_commission_data($commission_id, '_paid_status', 'unpaid');
+            update_post_meta($commission_id, '_paid_status', 'unpaid');
 
             // add commission id with associated vendor order
-            update_mvx_vendor_order_data($order->get_id(), '_commission_id', absint($commission_id));
+            update_post_meta($order->get_id(), '_commission_id', absint($commission_id));
             // Mark commissions as processed
-            update_mvx_vendor_order_data($order->get_id(), '_commissions_processed', 'yes');
+            update_post_meta($order->get_id(), '_commissions_processed', 'yes');
         }
     }
 

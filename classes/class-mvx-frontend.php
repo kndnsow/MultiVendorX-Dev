@@ -382,7 +382,7 @@ class MVX_Frontend {
      * @return void
      */
     public function mvx_checkout_order_processed($order_id, $order_posted, $order) {
-        if (!get_mvx_vendor_order_data($order_id, '_mvx_order_processed', true)) {
+        if (!get_post_meta($order_id, '_mvx_order_processed', true)) {
             mvx_process_order($order_id, $order);
         }
     }
@@ -1062,13 +1062,13 @@ class MVX_Frontend {
     public function mvx_checkout_user_location_save( $order_id ) {
         if( apply_filters( 'mvx_is_allow_checkout_user_location', true ) && mvx_is_module_active('distance-shipping') ) {
             if ( ! empty( $_POST['mvx_user_location'] ) ) {
-                update_mvx_vendor_order_data( $order_id, '_mvx_user_location', sanitize_text_field( $_POST['mvx_user_location'] ) );
+                update_post_meta( $order_id, '_mvx_user_location', sanitize_text_field( $_POST['mvx_user_location'] ) );
             }
             if ( ! empty( $_POST['mvx_user_location_lat'] ) ) {
-                update_mvx_vendor_order_data( $order_id, '_mvx_user_location_lat', sanitize_text_field( $_POST['mvx_user_location_lat'] ) );
+                update_post_meta( $order_id, '_mvx_user_location_lat', sanitize_text_field( $_POST['mvx_user_location_lat'] ) );
             }
             if ( ! empty( $_POST['mvx_user_location_lng'] ) ) {
-                update_mvx_vendor_order_data( $order_id, '_mvx_user_location_lng', sanitize_text_field( $_POST['mvx_user_location_lng'] ) );
+                update_post_meta( $order_id, '_mvx_user_location_lng', sanitize_text_field( $_POST['mvx_user_location_lng'] ) );
             }
         }
     }

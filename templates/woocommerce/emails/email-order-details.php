@@ -18,7 +18,7 @@ if ( count($suborders) > 1 ) { ?>
 if( $suborders ) {
     foreach ( $suborders as $suborder ) {
         $suborder_id = $suborder->get_id();
-        $vendor_id = get_mvx_vendor_order_data( $suborder_id, '_vendor_id', true );
+        $vendor_id = get_post_meta( $suborder_id, '_vendor_id', true );
         $vendor = get_mvx_vendor($vendor_id);
         if( $vendor ) {
             $store_name = $vendor->page_title;

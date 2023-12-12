@@ -179,7 +179,7 @@ class MVX_Elementor_StoreGetSupport extends Widget_Button {
                     ),
                 ),
             );
-            $customer_orders = get_mvx_vendor_order_datas($args);
+            $customer_orders = get_posts($args);
             ?>
             <button type="button" class="mvx-support-butn <?php echo is_user_logged_in() ? 'mvx-get-support-butn' : ''; ?>" ><span></span><?php esc_html_e('Get Support', 'multivendorx')?></button>
             <div id="store-support-modal" class="modal fade mvx-support-modal" role="dialog" style="display: none;">

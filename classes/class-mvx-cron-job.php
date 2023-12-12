@@ -77,8 +77,8 @@ class MVX_Cron_Job {
         if ($commissions && is_array($commissions)) {
             foreach ($commissions as $commission) {
                 $commission_id = $commission->ID;
-                $vendor_term_id = get_mvx_order_commission_data($commission_id, '_commission_vendor', true);
-                $order_id = get_mvx_order_commission_data( $commission_id ,'_commission_order_id', true );
+                $vendor_term_id = get_post_meta($commission_id, '_commission_vendor', true);
+                $order_id = get_post_meta( $commission_id ,'_commission_order_id', true );
                 $order = wc_get_order( $order_id );
                 if ( is_a( $order, 'WC_Order' ) && !in_array( $order->get_status(), apply_filters( 'mvx_cron_mass_payment_exclude_order_statuses',array( 'failed', 'cancelled' ) ) ) ) {
                     $commission_to_pay[$vendor_term_id][] = $commission_id;
@@ -107,15 +107,11 @@ class MVX_Cron_Job {
         $args = array(
             'post_type' => 'dc_commission',
             'post_status' => array('publish', 'private'),
-            'meta_query' => array(
-                array(
-                    'key' => '_paid_status',
-                    'value' => 'unpaid',
-                    'compare' => '='
-                )
-            ),
+            'meta_key' => '_paid_status',
+            'meta_value' => 'unpaid',
+            'posts_per_page' => 5
         );
-        $commissions = get_mvx_order_commission_datas($args);
+        $commissions = get_posts($args);
         return $commissions;
     }
 
@@ -490,16 +486,16 @@ class MVX_Cron_Job {
                                             'line_items' => $vendor_items
                                     ), true);
                                     // mark as shipped
-                                    $shippers = get_mvx_vendor_order_data($vorder->order_id, 'dc_pv_shipped', true) ? get_mvx_vendor_order_data($vorder->order_id, 'dc_pv_shipped', true) : array();
+                                    $shippers = get_post_meta($vorder->order_id, 'dc_pv_shipped', true) ? get_post_meta($vorder->order_id, 'dc_pv_shipped', true) : array();
                                     if (in_array($vendor->id, $shippers)) {
-                                        update_mvx_vendor_order_data($vendor_order_id, 'dc_pv_shipped', $shippers);
+                                        update_post_meta($vendor_order_id, 'dc_pv_shipped', $shippers);
                                         // set new meta shipped
-                                        update_mvx_vendor_order_data($vendor_order_id, 'mvx_vendor_order_shipped', 1);
+                                        update_post_meta($vendor_order_id, 'mvx_vendor_order_shipped', 1);
                                     }
                                     // add commission id in order meta
-                                    update_mvx_vendor_order_data($vendor_order_id, '_commission_id', $vorder->commission_id);
+                                    update_post_meta($vendor_order_id, '_commission_id', $vorder->commission_id);
                                     // add order id with commission meta
-                                    update_mvx_vendor_order_data($vorder->commission_id, '_commission_order_id', $vendor_order_id);
+                                    update_post_meta($vorder->commission_id, '_commission_order_id', $vendor_order_id);
                                     // for track BW vendor order-commission
                                     update_post_meta($vendor_order_id, '_old_order_id', $vorder->order_id);
                                     // prevent duplication

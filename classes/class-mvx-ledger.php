@@ -25,7 +25,7 @@ class MVX_Ledger {
     
     public function mvx_commission_after_save_commission_total( $commission_id, $order ){
         if( $order ){
-            $vendor_id = get_mvx_vendor_order_data( $order->get_id(), '_vendor_id', true);
+            $vendor_id = get_post_meta( $order->get_id(), '_vendor_id', true);
             $vendor = get_mvx_vendor( $vendor_id );
             $args = array(
                 'meta_query' => array(
@@ -37,7 +37,7 @@ class MVX_Ledger {
                 ),
             );
             $unpaid_commission_total = MVX_Commission::get_commissions_total_data( $args, $vendor->id );
-            $commission_total = get_mvx_order_commission_data( $commission_id, '_commission_total', true );
+            $commission_total = get_post_meta( $commission_id, '_commission_total', true );
             $data = array(
                 'vendor_id'     => $vendor_id,
                 'order_id'      => $order->get_id(),
@@ -57,8 +57,8 @@ class MVX_Ledger {
     public function mvx_orders_migration_order_created( $order_id, $tbl_vorder_data ){
         $order = wc_get_order( $order_id );
         if( $order ) :
-            $commission_id = get_mvx_vendor_order_data( $order->get_id(), '_commission_id', true );
-            $commission = get_mvx_order_commission_by_id( $commission_id );
+            $commission_id = get_post_meta( $order->get_id(), '_commission_id', true );
+            $commission = get_post( $commission_id );
             $commission_specific_orders = get_mvx_vendor_orders(array('vendor_id' => $tbl_vorder_data->vendor_id, 'commission_id' => $commission_id, 'order_id' => $tbl_vorder_data->order_id ));
             $commission_total = 0;
             foreach ($commission_specific_orders as $corder) {
@@ -93,7 +93,7 @@ class MVX_Ledger {
     
     public function mvx_create_commission_refund_after_commission_note( $commission_id, $commissions_refunded_amt, $refund_id, $order ) {
         if( $order ){
-            $vendor_id = get_mvx_vendor_order_data( $order->get_id(), '_vendor_id', true);
+            $vendor_id = get_post_meta( $order->get_id(), '_vendor_id', true);
             $refund_total = ( $commissions_refunded_amt ) ? abs( array_sum( $commissions_refunded_amt) ) : 0;
             $refund = new WC_Order_Refund($refund_id);
             $vendor = get_mvx_vendor( $vendor_id );
@@ -131,7 +131,7 @@ class MVX_Ledger {
             if( $commissions ){
                 foreach ( $commissions as $commission_id ) {
                     $withdrawal_total = MVX_Commission::commission_totals($commission_id, 'edit');
-                    $order_id = get_mvx_order_commission_data( $commission_id, '_commission_order_id', true );
+                    $order_id = get_post_meta( $commission_id, '_commission_order_id', true );
                     $args = array(
                         'meta_query' => array(
                             array(
@@ -161,11 +161,11 @@ class MVX_Ledger {
     }
     
     public function before_commission_delete( $post_id ) {
-        // if( get_post_type( $post_id ) != 'dc_commission' ) return;
-        if( get_mvx_order_commission_data( $post_id, '_paid_status', true ) != 'unpaid' ) return;
+        if( get_post_type( $post_id ) != 'dc_commission' ) return;
+        if( get_post_meta( $post_id, '_paid_status', true ) != 'unpaid' ) return;
         
-        $vendor_term_id = get_mvx_order_commission_data( $post_id, '_commission_vendor', true );
-        $order_id = get_mvx_order_commission_data( $post_id, '_commission_order_id', true );
+        $vendor_term_id = get_post_meta( $post_id, '_commission_vendor', true );
+        $order_id = get_post_meta( $post_id, '_commission_order_id', true );
         $vendor = get_mvx_vendor_by_term( $vendor_term_id );
         if( $vendor ) :
             $args = array(
@@ -178,7 +178,7 @@ class MVX_Ledger {
                 ),
             );
             $unpaid_commission_total = MVX_Commission::get_commissions_total_data( $args, $vendor->id );
-            $commission_total = get_mvx_order_commission_data( $post_id, '_commission_total', true );
+            $commission_total = get_post_meta( $post_id, '_commission_total', true );
 
             $data = array(
                 'vendor_id'     => $vendor->id,

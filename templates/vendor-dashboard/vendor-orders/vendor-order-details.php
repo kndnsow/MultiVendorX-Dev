@@ -15,8 +15,7 @@ if (!defined('ABSPATH')) {
 global $woocommerce, $MVX;
 $vendor = get_current_vendor();
 $order = wc_get_order($order_id);
-// print_r($order);
-if (!$order ||!is_mvx_vendor_order($order, apply_filters( 'mvx_current_vendor_order_capability' ,true ))) {
+if (!$order || !is_mvx_vendor_order($order, apply_filters( 'mvx_current_vendor_order_capability' ,true ))) {
     ?>
     <div class="col-md-12">
         <div class="panel panel-default">
@@ -101,3 +100,5 @@ $disallow_vendor_order_status = get_mvx_vendor_settings('disallow_vendor_order_s
         
     </div>
 </div>
+
+

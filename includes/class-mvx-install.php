@@ -303,74 +303,10 @@ class MVX_Install {
             PRIMARY KEY (`id`)
         ) $collate;";
 
-        $create_tables_query[] = "CREATE TABLE IF NOT EXISTS `" . $wpdb->prefix . "mvx_order_commission` (
-            `id` bigint(20) unsigned NOT NULL,
-            `post_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            `status` varchar(100) NOT NULL DEFAULT '',
-            `post_author` bigint(20) NOT NULL DEFAULT 0,
-            `_commission_vendor` bigint(20) NOT NULL DEFAULT 0,
-            `_commission_order_id` bigint(20) NOT NULL DEFAULT 0,
-            `_commission_product` bigint(20) NOT NULL DEFAULT 0,
-            `_commission_amount` DECIMAL(10, 2) DEFAULT NULL,
-            `_shipping` DECIMAL(10, 2) DEFAULT NULL,
-            `_tax` DECIMAL(10, 2) DEFAULT NULL,
-            `_commission_total_include_shipping` DECIMAL(10, 2) DEFAULT NULL,
-            `_commission_total_include_tax` DECIMAL(10, 2) DEFAULT NULL,
-            `_commission_total` DECIMAL(10, 2) DEFAULT NULL,
-            `_paid_status` varchar(100) NOT NULL DEFAULT '',
-            `_commission_include_coupon` BOOLEAN DEFAULT NULL,
-            `_commission_refunded_items` bigint(20) DEFAULT NULL,
-            `_commission_refunded_items_data` DECIMAL(10, 2) DEFAULT NULL,
-            `_commission_refunded_shipping` DECIMAL(10, 2) DEFAULT NULL,
-            `_commission_refunded_tax` DECIMAL(10, 2) DEFAULT NULL,
-            `_commission_refunded_global` DECIMAL(10, 2) DEFAULT NULL,
-            `_commission_refunded_data` DECIMAL(10, 2) DEFAULT NULL,
-            `_commission_refunded` DECIMAL(10, 2) DEFAULT NULL,
-            `_refunded_commissions` DECIMAL(10, 2) DEFAULT NULL,
-            `_refunded_commissions_total` DECIMAL(10, 2) DEFAULT NULL,
-            PRIMARY KEY (`id`)
-        ) $collate;";
-
-        $create_tables_query[] = "CREATE TABLE IF NOT EXISTS `" . $wpdb->prefix . "mvx_orders` (
-            `id` bigint(20) unsigned NOT NULL,
-            `post_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            `post_parent` bigint(20) NOT NULL DEFAULT 0,
-            `_order_key` varchar(100) NOT NULL DEFAULT '',
-            `_vendor_id` bigint(20) NOT NULL,
-            `_customer_user` bigint(20) NOT NULL,
-            `_created_via` varchar(100) NOT NULL DEFAULT '',
-            `_prices_include_tax` BOOLEAN,
-            `_order_currency` varchar(100) NOT NULL DEFAULT '',
-            `_commissions_processed` varchar(20) NOT NULL DEFAULT '',
-            `billing` longtext,
-            `shipping` longtext,
-            `_payment_method` text,
-            `_payment_method_title` text,
-            `_order_migration` BOOLEAN,
-            `_customer_user_agent` text,
-            `mvx_vendor_order_status_synchronized` BOOLEAN,
-            `_customer_refund_order` varchar(100),
-            `_customer_refund_reason` text,
-            `dc_pv_shipped` text,
-            `mvx_vendor_order_shipped` int(11),
-            `_mvx_order_processed` BOOLEAN,
-            `_mvx_user_location` text NOT NULL DEFAULT '',
-            `_mvx_user_location_lat` text NOT NULL DEFAULT '',
-            `_mvx_user_location_lng` text NOT NULL DEFAULT '',
-            `_customer_ip_address` varchar(100) ,
-            `_mvx_order_version` varchar(100) NOT NULL DEFAULT '',
-            `order_items_commission_rates` varchar(100),
-            `_mvx_vendor_new_order_mail_triggered` BOOLEAN,
-            `commission_ids` varchar(100),
-            `_mvx_vendor_specific_order_migrated` BOOLEAN,
-            PRIMARY KEY (`id`)
-        ) $collate;";
-
         foreach ($create_tables_query as $create_table_query) {
             $wpdb->query($create_table_query);
         }
         mvx_update_option('mvx_table_created', true);
-        
     }
 
     /**

@@ -348,13 +348,13 @@ class mvx_transaction {
         $transaction_datas = array();
         if (!empty($commission_ids)) {
             foreach ($commission_ids as $commission_id) {
-                $vendor_id = get_mvx_order_commission_data($commission_id, '_commission_vendor', true);
+                $vendor_id = get_post_meta($commission_id, '_commission_vendor', true);
                 $vendor = get_mvx_vendor_by_term($vendor_id);
-                $paid_status = get_mvx_order_commission_data($commission_id, '_paid_status', true);
-                $order_id = get_mvx_order_commission_data($commission_id, '_commission_order_id', true);
+                $paid_status = get_post_meta($commission_id, '_paid_status', true);
+                $order_id = get_post_meta($commission_id, '_commission_order_id', true);
                 $order = new WC_Order($order_id);
-                $vendor_shipping = get_mvx_order_commission_data($commission_id, '_shipping', true);
-                $vendor_tax = get_mvx_order_commission_data($commission_id, '_tax', true);
+                $vendor_shipping = get_post_meta($commission_id, '_shipping', true);
+                $vendor_tax = get_post_meta($commission_id, '_tax', true);
                 $due_vendor = $vendor->mvx_get_vendor_part_from_order($order, $vendor_id);
 
                 if (!$vendor_shipping)
@@ -362,7 +362,7 @@ class mvx_transaction {
                 if (!$vendor_tax)
                     $vendor_tax = $due_vendor['tax'];
 
-                $amount = get_mvx_order_commission_data($commission_id, '_commission_amount', true);
+                $amount = get_post_meta($commission_id, '_commission_amount', true);
                 $vendor_due = 0;
                 $vendor_due = (float) $amount + (float) $vendor_shipping + (float) $vendor_tax;
                 $transaction_datas[$vendor_id]['commission_detail'][$commission_id] = $order_id;

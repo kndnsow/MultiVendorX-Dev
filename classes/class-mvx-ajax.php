@@ -213,7 +213,7 @@ class MVX_Ajax {
         $vendor = get_current_vendor();
         
         $args = array(
-            // 'post_author' => $vendor->id,
+            'author' => $vendor->id,
             'post_status' => 'any',
             'date_query' => array(
                 array(
@@ -221,15 +221,9 @@ class MVX_Ajax {
                     'before'    => $end_date,
                     'inclusive' => true,
                 ),
-            ),
-            'meta_query' => array(
-                array(
-                    'key' => '_vendor_id',
-                    'value' => $vendor->id,
-                )
             )
         );
-        $vendor_all_orders = apply_filters('mvx_datatable_get_vendor_all_orders', mvx_get_orders($args, 'id', true), $requestData, $_POST);
+        $vendor_all_orders = apply_filters('mvx_datatable_get_vendor_all_orders', mvx_get_orders($args), $requestData, $_POST);
         
         $filterActionData = array();
         parse_str($requestData['orders_filter_action'], $filterActionData);
@@ -270,7 +264,7 @@ class MVX_Ajax {
                 if( $filterActionData['order_status'] == 'request_refund') {
                     $vendor_all_orders = mvx_get_orders($args);
                     foreach ($vendor_all_orders as $key_refund => $value_refund) {
-                        $cust_refund_status = get_mvx_vendor_order_data( $value_refund, '_customer_refund_order', true ) ? get_mvx_vendor_order_data( $value_refund, '_customer_refund_order', true ) : '';
+                        $cust_refund_status = get_post_meta( $value_refund, '_customer_refund_order', true ) ? get_post_meta( $value_refund, '_customer_refund_order', true ) : '';
                         if ($cust_refund_status != 'refund_request') {
                             unset($vendor_all_orders[$key_refund]);
                         }
@@ -288,16 +282,15 @@ class MVX_Ajax {
         }
         
         $vendor_orders = array_slice($vendor_all_orders, $requestData['start'], $requestData['length']);
-        // $vendor_orders = $vendor_all_orders;
         $data = array();
 
         foreach ($vendor_orders as $order_id) {
             $order = wc_get_order($order_id);
-            $vendor_order = mvx_get_order($order_id->id);
+            $vendor_order = mvx_get_order($order_id);
             if ($order) {
                 if(in_array($order->get_status(), array('draft', 'trash'))) continue;
                 $actions = array();
-                $is_shipped = (array) get_mvx_vendor_order_data($order->get_id(), 'dc_pv_shipped', true);
+                $is_shipped = (array) get_post_meta($order->get_id(), 'dc_pv_shipped', true);
                 if (!in_array($vendor->id, $is_shipped)) {
                     $mark_ship_title = __('Mark as shipped', 'multivendorx');
                 } else {
@@ -343,8 +336,7 @@ class MVX_Ajax {
                     'select_order' => '<input type="checkbox" class="select_' . $order->get_status() . '" name="selected_orders[' . $order->get_id() . ']" value="' . $order->get_id() . '" />',
                     'order_id' => $order->get_id(),
                     'order_date' => mvx_date($order->get_date_created()),
-                    // 'vendor_earning' => ($vendor_order->get_commission_total()) ? $vendor_order->get_commission_total() : '-',
-                    'vendor_earning' => (get_mvx_order_commission_data($order_id->id, '_commission_total')) ? (get_mvx_order_commission_data($order_id->id, '_commission_total')) : '-',
+                    'vendor_earning' => ($vendor_order->get_commission_total()) ? $vendor_order->get_commission_total() : '-',
                     'order_status' => esc_html(wc_get_order_status_name($order->get_status())), //ucfirst($order->get_status()),
                     'action' => apply_filters('mvx_vendor_orders_row_action_html', $action_html, $actions)
                         ), $order);
@@ -788,7 +780,7 @@ class MVX_Ajax {
             if (!$vendor)
                 die('Invalid request');
             $order_data = array();
-            $commission_id = get_mvx_vendor_order_data( $order_id, '_commission_id', true );
+            $commission_id = get_post_meta( $order_id, '_commission_id', true );
             if (!empty($commission_id)) {
                 //$commission_id = $customer_orders[0]['commission_id'];
                 $order_data[$commission_id] = $order_id;
@@ -1358,9 +1350,9 @@ class MVX_Ajax {
                         if ($order->get_payment_method() == 'cod' && $vendor->is_shipping_enable())
                             continue;
                         
-                        $commission_amount = get_mvx_order_commission_data( $commission_id, '_commission_amount', true );
-                        $shipping_amount = get_mvx_order_commission_data( $commission_id, '_shipping', true );
-                        $tax_amount = get_mvx_order_commission_data( $commission_id, '_tax', true );
+                        $commission_amount = get_post_meta( $commission_id, '_commission_amount', true );
+                        $shipping_amount = get_post_meta( $commission_id, '_shipping', true );
+                        $tax_amount = get_post_meta( $commission_id, '_tax', true );
                         
                         $row = array();
                         $row ['select_withdrawal'] = '<input name="commissions[]" value="' . $commission_id . '" class="select_withdrawal" type="checkbox" ' . $disabled_reqested_withdrawals . '>';
@@ -1507,7 +1499,7 @@ class MVX_Ajax {
                     $commission_details = get_post_meta($transaction_id, 'commission_detail', true);
                     $order_id = array();
                     foreach ($commission_details as $commission_detail)
-                        $order_id[] = get_mvx_order_commission_data($commission_detail, '_commission_order_id', true);
+                        $order_id[] = get_post_meta($commission_detail, '_commission_order_id', true);
                     $transfer_charge = get_post_meta($transaction_id, 'transfer_charge', true);
                     $transaction_amt = get_post_meta($transaction_id, 'amount', true) - get_post_meta($transaction_id, 'transfer_charge', true) - get_post_meta($transaction_id, 'gateway_charge', true);
                     $row = array();
@@ -2108,8 +2100,8 @@ class MVX_Ajax {
 
                         $action_html = '';
                         if ($vendor->is_shipping_enable()) {
-                            $is_shipped = (array) get_mvx_vendor_order_data($pending_order->get_id(), 'dc_pv_shipped', true);
-                            $vendor_order_shipped = get_mvx_vendor_order_data($pending_order->get_id(), 'mvx_vendor_order_shipped');
+                            $is_shipped = (array) get_post_meta($pending_order->get_id(), 'dc_pv_shipped', true);
+                            $vendor_order_shipped = get_post_meta($pending_order->get_id(), 'mvx_vendor_order_shipped');
                             if (!in_array($vendor->id, $is_shipped) && !$vendor_order_shipped ) {
                                 $action_html .= '<a href="javascript:void(0)" title="' . __('Mark as shipped', 'multivendorx') . '" onclick="mvxMarkeAsShip(this,' . $pending_order->get_id() . ')"><i class="mvx-font ico-shippingnew-icon action-icon"></i></a> ';
                             } else {
@@ -3493,8 +3485,8 @@ class MVX_Ajax {
                         $status = '<i class="'. $ledger->ref_status .' mvx-font ico-processing-status-icon" title="'. ucfirst($ledger->ref_status).'"></i>';
                     }
                     // Update commission status
-                    if($ledger->ref_type == 'commission' && get_mvx_order_commission_data($ledger->ref_id, '_paid_status', true) == 'paid') 
-                        $status = '<i class="'. get_mvx_order_commission_data($ledger->ref_id, '_paid_status', true).' mvx-font ico-completed-status-icon" title="'. ucfirst(get_mvx_order_commission_data($ledger->ref_id, '_paid_status', true)).'"></i>';
+                    if($ledger->ref_type == 'commission' && get_post_meta($ledger->ref_id, '_paid_status', true) == 'paid') 
+                        $status = '<i class="'. get_post_meta($ledger->ref_id, '_paid_status', true).' mvx-font ico-completed-status-icon" title="'. ucfirst(get_post_meta($ledger->ref_id, '_paid_status', true)).'"></i>';
                     $row = array();
                     $row ['status'] = $status;
                     $row ['date'] = mvx_date($ledger->created);

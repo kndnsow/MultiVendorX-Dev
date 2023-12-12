@@ -43,7 +43,7 @@ final class MVX_Woo_Helper {
      * @access public
      */
     public function __construct() {
-        add_action( 'mvx_init', array( &$this, 'init' ) );
+        add_action( 'mvx_init', array( &$this, 'init' ) );   
     }
 
     /**

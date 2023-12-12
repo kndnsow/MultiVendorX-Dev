@@ -1672,13 +1672,13 @@ if (!function_exists('do_mvx_commission_data_migrate')) {
             $commissions_to_migrate = array();
             foreach ($commissions as $commission) {
                 $commissions_to_migrate[$commission->ID] = array(
-                    'order_id' => get_mvx_order_commission_data($commission->ID, '_commission_order_id', true),
-                    'products' => get_mvx_order_commission_data($commission->ID, '_commission_product', true),
-                    'vendor_id' => get_mvx_order_commission_data($commission->ID, '_commission_vendor', true),
-                    'commission_amount' => get_mvx_order_commission_data($commission->ID, '_commission_amount', true),
-                    'shipping_amount' => get_mvx_order_commission_data($commission->ID, '_shipping', true),
-                    'tax_amount' => get_mvx_order_commission_data($commission->ID, '_tax', true),
-                    'paid_status' => get_mvx_order_commission_data($commission->ID, '_paid_status', true)
+                    'order_id' => get_post_meta($commission->ID, '_commission_order_id', true),
+                    'products' => get_post_meta($commission->ID, '_commission_product', true),
+                    'vendor_id' => get_post_meta($commission->ID, '_commission_vendor', true),
+                    'commission_amount' => get_post_meta($commission->ID, '_commission_amount', true),
+                    'shipping_amount' => get_post_meta($commission->ID, '_shipping', true),
+                    'tax_amount' => get_post_meta($commission->ID, '_tax', true),
+                    'paid_status' => get_post_meta($commission->ID, '_paid_status', true)
                 );
             }
             $update_data = array();
@@ -1782,10 +1782,10 @@ if (!function_exists('mvx_process_order')) {
         global $wpdb;
         if (!$order)
             $order = wc_get_order($order_id);
-        if (get_mvx_vendor_order_data($order_id, '_mvx_order_processed', true) && !$order) {
+        if (get_post_meta($order_id, '_mvx_order_processed', true) && !$order) {
             return;
         }
-        $vendor_shipping_array = get_mvx_vendor_order_data($order_id, 'dc_pv_shipped', true);
+        $vendor_shipping_array = get_post_meta($order_id, 'dc_pv_shipped', true);
         $mark_ship = 0;
         $items = $order->get_items('line_item');
         $shipping_items = $order->get_items('shipping');
@@ -1868,7 +1868,7 @@ if (!function_exists('mvx_process_order')) {
                 }
             }
         }
-        update_mvx_vendor_order_data($order_id, '_mvx_order_processed', true);
+        update_post_meta($order_id, '_mvx_order_processed', true);
         do_action('mvx_order_processed', $order);
     }
 
@@ -8268,11 +8268,11 @@ if (!function_exists('mvx_count_commission')) {
             'post_type' => 'dc_commission',
             'post_status' => array('private', 'publish')
         );
-        $commission_id = wp_list_pluck(get_mvx_order_commission_datas($args), 'ID');
+        $commission_id = wp_list_pluck(get_posts($args), 'ID');
         $commission_count = new stdClass();
         $commission_count->paid = $commission_count->unpaid = $commission_count->reverse = 0;
         foreach ($commission_id as $id) {
-            $commission_status = get_mvx_order_commission_data($id, '_paid_status', true);
+            $commission_status = get_post_meta($id, '_paid_status', true);
             if ($commission_status) {
                 switch ($commission_status) {
                     case 'paid':
@@ -8318,328 +8318,4 @@ if (!function_exists('mvxArrayToObject')) {
             return $d;
         }
     }
-}
-
-if(!function_exists('insert_mvx_order_commission_data')){
-    function insert_mvx_order_commission_data($data) {
-        global $wpdb;
-        $data['ID'] = $data['_commission_order_id'];
-        $table_name = $wpdb->prefix . 'mvx_order_commission';
-        $wpdb->insert($table_name, $data);
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":comission_id: " . $wpdb->insert_id . ' : ' . json_encode($data) . "\n", FILE_APPEND);
-        return $data['ID'];
-    }
-}
-
-if(!function_exists('update_mvx_order_commission_data')){
-    function update_mvx_order_commission_data($commission_id, $key, $value) {
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'mvx_order_commission';
-        $data = array($key => $value);
-        $where = array('id' => $commission_id);
-        $wpdb->update($table_name, $data, $where);
-    }
-}
-
-if (!function_exists('get_mvx_order_commission_by_id')) {
-    function get_mvx_order_commission_by_id($id) {
-        global $wpdb;
-        $data = get_post($id);
-        if($data){
-            return $data;
-        }
-        $data = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}mvx_order_commission WHERE ID = %d", $id), ARRAY_A);
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":comission: " . json_encode($data) . ' : ' . $data . "\n", FILE_APPEND);
-        return is_null($data) ? false : $data;
-    }
-}
-
-if (!function_exists('get_mvx_order_commission_data')) {
-    function get_mvx_order_commission_data($commission_id, $key, $single = true) {
-        global $wpdb;
-        $value = get_post_meta($commission_id, $key, $single);
-        if($value){
-            return $value;
-        }
-        $value = $wpdb->get_var($wpdb->prepare("SELECT $key FROM {$wpdb->prefix}mvx_order_commission WHERE ID = %d", $commission_id));
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":comission: " . $commission_id . $key . ' : ' . $value . "\n", FILE_APPEND);
-        return is_null($value) ? false : $value;
-    }
-
-}
-
-if (!function_exists('get_mvx_order_commission_datas')) {
-    function get_mvx_order_commission_datas($args = []) {
-        global $wpdb;
-
-        // $date_query =  isset($arg['date_query']) ?? '';
-
-        // if(!empty($date_query))
-        //     $where_clause = " AND post_date >= " . $date_query['after']['year'] . '-' . $date_query['after']['month'] . '-' . $date_query['after']['day'] . " AND post_date <= " . $date_query['before']['year'] . '-' . $date_query['before']['month'] . '-' . $date_query['before']['day'];
-        // Get posts using get_posts
-        // $data = get_posts($args);
-        // If posts are found, return them
-        // if ($data) {
-            // return $data;
-        // }
-        $where_clause = array();
-        // // Handle 'meta_query'
-        if (isset($args['meta_query'])) {
-            foreach ($args['meta_query'] as $meta) {
-                $where_clause[] = $meta['key'] . $meta['compare'] . $meta['value'];
-            }
-            unset($args['meta_query']);
-        }
-        // // Handle 'date_query'
-        // if (isset($args['date_query'])) {
-        //     foreach ($args['date_query'] as $date_query_key => $date_query_value) {
-        //         $where_clause[] = $wpdb->prepare("DATE_FORMAT({$date_query_key}, '%%Y-%%m-%%d %%H:%%i:%%s') %s", $date_query_value);
-        //     }
-        //     unset($args['date_query']);
-        // }
-        // if(isset($args['post__in'])){
-        //     $where_clause[] = "id = ". $args['post__in'];
-        //     unset($args['fields']);
-        // }
-        $return_fuilds = "*";
-        // //handle return fields
-        if(isset($args['fields'])){
-            if($args['fields'] == 'ids'){
-                $return_fuilds = "id";
-            }
-            unset($args['fields']);
-        }
-        // // Handle other arguments
-        // foreach ($args as $key => $value) {
-        //     if (is_array($value)) {
-        //         $where_clause[] = $wpdb->prepare("{$key} IN ('" . implode("','", $value) . "')");
-        //     } else {
-        //         $where_clause[] = $wpdb->prepare("{$key} = %s", $value);
-        //     }
-        // }
-        $where = '';
-        if(!empty($where_clause)){
-            $where = " WHERE " . implode(' AND ', $where_clause);
-        }
-        // // Construct and execute the SQL query
-        $data = $wpdb->get_col($wpdb->prepare("SELECT " . $return_fuilds . " FROM {$wpdb->prefix}mvx_order_commission " . $where , OBJECT));
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":comission: " . json_encode($args) . ' : ' . json_encode($data) . "\n", FILE_APPEND);
-        // // Return the data or false if null
-        return is_null($data) ? false : $data;
-    }
-}
-
-
-if(!function_exists('insert_mvx_vendor_order_data')){
-    function insert_mvx_vendor_order_data($data, $parent_order, $vendor_id) {
-       //createing sub order on wc_orders table
-        $order = new WC_Order();
-        $meta = [
-            'cart_hash',
-            'customer_id',
-            'currency',
-            'prices_include_tax',
-            'customer_ip_address',
-            'customer_user_agent',
-            'customer_note',
-            'payment_method',
-            'payment_method_title',
-            'status',
-            'billing_country',
-            'billing_first_name',
-            'billing_last_name',
-            'billing_company',
-            'billing_address_1',
-            'billing_address_2',
-            'billing_city',
-            'billing_state',
-            'billing_postcode',
-            'billing_email',
-            'billing_phone',
-            'shipping_country',
-            'shipping_first_name',
-            'shipping_last_name',
-            'shipping_company',
-            'shipping_address_1',
-            'shipping_address_2',
-            'shipping_city',
-            'shipping_state',
-            'shipping_postcode',
-        ];
-        // save other details
-        $order->set_created_via( 'mvx_vendor_order' );
-        $order->calculate_totals();
-        $order->set_parent_id( $parent_order->get_id() );
-        $order->update_meta_data( '_vendor_id', $vendor_id );
-        foreach ( $meta as $key ) {
-            if ( is_callable( [ $order, "set_{$key}" ] ) ) {
-                $order->{"set_{$key}"}( $parent_order->{"get_{$key}"}() );
-            }
-        }
-        $order->save();
-        //create suborder on mvx_orders table
-        global $wpdb;
-        
-        $data['ID'] = $order->get_id();
-        $table_name = $wpdb->prefix . 'mvx_orders';
-        $wpdb->insert($table_name, $data);
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":wpdb mvx order data: "  . json_encode($data) . "\n id:" . $data['ID'] . "\n", FILE_APPEND);
-        return $data['ID'];
-    }
-}
-
-if(!function_exists('update_mvx_vendor_order_data')){
-    function update_mvx_vendor_order_data($vendor_order_id, $key, $value) {
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'mvx_orders';
-        $data = array($key => $value);
-        $where = array('id' => $vendor_order_id);
-        $wpdb->update($table_name, $data, $where);
-    }
-}
-
-if (!function_exists('get_mvx_vendor_order_by_id')) {
-    function get_mvx_vendor_order_by_id($id) {
-        global $wpdb;
-        $data = wc_get_order($id);
-        if($data){
-            return $data;
-        }
-        $data = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}mvx_orders WHERE ID = %d", $id), ARRAY_A);
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":order: " . json_encode($data) . ' : ' . $data . "\n", FILE_APPEND);
-
-        return is_null($data) ? false : $data;
-    }
-}
-
-if (!function_exists('get_mvx_vendor_order_data')) {
-    function get_mvx_vendor_order_data($vendor_order_id, $key, $single = true) {
-        global $wpdb;
-        $value = '';
-        //  get_post_meta($vendor_order_id, $key, $single);
-        if($value){
-            return $value;
-        }
-        $value = $wpdb->get_var($wpdb->prepare("SELECT {$key} FROM {$wpdb->prefix}mvx_orders WHERE ID = %d", $vendor_order_id));
-
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":order: " . $commission_id . $key . ' : ' . $value . "\n", FILE_APPEND);
-        return is_null($value) ? false : $value;
-    }
-
-}
-
-if (!function_exists('get_mvx_vendor_order_datas')) {
-    function get_mvx_vendor_order_datas($args) {
-        global $wpdb;
-        // Get posts using get_posts
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":arg: " . json_encode($args) . "\n", FILE_APPEND);
-        $datas = wc_get_orders($args);
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . json_encode($args) . "\n:orders:  : " . (var_export($datas, true)) . "\n\n\n\n\n", FILE_APPEND);
-        // if($datas){
-            return $datas;
-        // }
-        // If posts are found, return them
-        // $return_fuilds = "*";
-        // //handle return fields
-        // if(isset($args['fields'])){
-        //     if($args['fields'] == 'ids'){
-        //         $return_fuilds = "id";
-        //     }
-        //     unset($args['fields']);
-        // }
-        // $where_clause =array();
-        // // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . json_encode($args) . ":orders:  : " .  "\n", FILE_APPEND);
-
-        // if (isset($args['meta_query'])) {
-            
-        //         foreach ($args['meta_query'] as $meta) {
-        //             if(is_array($meta['value'])){
-        //                 $where_clause[] = $meta['key'] . "IN" . '(' . implode(', ', array_map(function($value) {
-        //                     return "'$value'";
-        //                 }, $meta['value'])) . ')';
-        //             } else {
-        //                 $meta_comp = isset($meta['compare']) ? $meta['compare'] : " = ";
-        //                 $where_clause[] = $meta['key'] . $meta_comp  . "'{$meta['value']}'";
-        //             }
-        //         }
-        //         unset($args['meta_query']);
-        // }
-        // $where = '';
-        // if(!empty($where_clause)){
-        //     $where = " WHERE " . implode(' AND ', $where_clause);
-        // }
-        // // foreach($datas as $data){
-        // //     $mvx_data = $wpdb->get_row($wpdb->prepare("SELECT  $return_fuilds  FROM {$wpdb->prefix}mvx_orders WHERE id =". $data->get_id(), ARRAY_A));
-        // //     // $return_data = (object)[...$data, ...$mvx_data];
-
-        // //     $data->mvx_data = $mvx_data;
-        // //     file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . 'orderid:' . $data->get_id(). ":orders:  : " . var_export($return_data, true) . "\n", FILE_APPEND);
-        // // }
-        // // Construct and execute the SQL query
-        // // $mvx_data = null;
-        // $mvx_data = $wpdb->get_results($wpdb->prepare("SELECT $return_fuilds FROM {$wpdb->prefix}mvx_orders ". $where, object));
-        // // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . json_encode($args) . "\n:sql:  : " . ($wpdb->prepare("SELECT $return_fuilds FROM {$wpdb->prefix}mvx_orders ". $where, object)) . "\n:orders:  : " . (var_export($mvx_data, true)) . "\n", FILE_APPEND);
-        //     // Return the data or false if null
-        // return is_null($mvx_data) ? false : $mvx_data;
-        // return null;
-    }
-
-}
-
-if (!function_exists('get_mvx_vendor_order_datas_for_refund')) {
-    function get_mvx_vendor_order_datas_for_refund($args) {
-        global $wpdb;
-        // Get posts using get_posts
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":orders: " . json_encode($args) . "\n", FILE_APPEND);
-        // $datas = wc_get_orders($args);
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . json_encode($args) . "\n:orders:  : " . (var_export($datas, true)) . "\n\n\n\n\n", FILE_APPEND);
-        // if($datas){
-        //     return $datas;
-        // }
-        // If posts are found, return them
-        $return_fuilds = "*";
-        //handle return fields
-        if(isset($args['fields'])){
-            if($args['fields'] == 'ids'){
-                $return_fuilds = "id";
-            }
-            unset($args['fields']);
-        }
-        $where_clause =array();
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . json_encode($args) . ":orders:  : " .  "\n", FILE_APPEND);
-
-        if (isset($args['meta_query'])) {
-            
-                foreach ($args['meta_query'] as $meta) {
-                    if(is_array($meta['value'])){
-                        $where_clause[] = $meta['key'] . " IN " . '(' . implode(', ', array_map(function($value) {
-                            return "'$value'";
-                        }, $meta['value'])) . ')';
-                    } else {
-                        $meta_comp = isset($meta['compare']) ? $meta['compare'] : " = ";
-                        $where_clause[] = $meta['key'] . $meta_comp  . "'{$meta['value']}'";
-                    }
-                }
-                unset($args['meta_query']);
-        }
-        $where = '';
-        if(!empty($where_clause)){
-            $where = " WHERE " . implode(' AND ', $where_clause);
-        }
-        // foreach($datas as $data){
-        //     $mvx_data = $wpdb->get_row($wpdb->prepare("SELECT  $return_fuilds  FROM {$wpdb->prefix}mvx_orders WHERE id =". $data->get_id(), ARRAY_A));
-        //     // $return_data = (object)[...$data, ...$mvx_data];
-
-        //     $data->mvx_data = $mvx_data;
-        //     file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . 'orderid:' . $data->get_id(). ":orders:  : " . var_export($return_data, true) . "\n", FILE_APPEND);
-        // }
-        // Construct and execute the SQL query
-        $mvx_data = null;
-        $mvx_data = $wpdb->get_results($wpdb->prepare("SELECT $return_fuilds FROM {$wpdb->prefix}mvx_orders ". $where, ARRAY_A));
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . json_encode($args) . "\n:sql:  : " . ($wpdb->prepare("SELECT $return_fuilds FROM {$wpdb->prefix}mvx_orders ". $where, object)) . "\n:orders:  : " . (var_export($mvx_data, true)) . "\n", FILE_APPEND);
-            // Return the data or false if null
-        return is_null($mvx_data) ? false : $mvx_data;
-        // return null;
-    }
-
 }

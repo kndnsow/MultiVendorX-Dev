@@ -40,13 +40,13 @@ class MVX_Calculate_Commission {
      * @param object $order
      * @return void
      */
-    public function mvx_create_commission($vendor_order_id, $order) {
+    public function mvx_create_commission($vendor_order_id, $posted_data, $order) {
         global $MVX;
-        $processed = get_mvx_vendor_order_data($vendor_order_id, '_commissions_processed', true);
+        $processed = get_post_meta($vendor_order_id, '_commissions_processed', true);
         if (!$processed && apply_filters( 'wcmp_create_order_commissions_as_per_statuses', true, $vendor_order_id )) {
             //$commission_ids = get_post_meta($vendor_order_id, '_commission_ids', true) ? get_post_meta($vendor_order_id, '_commission_ids', true) : array();
             $vendor_order = wc_get_order($vendor_order_id);
-            $vendor_id = get_mvx_vendor_order_data($vendor_order_id, '_vendor_id', true);
+            $vendor_id = get_post_meta($vendor_order_id, '_vendor_id', true);
 
             // create vendor commission
             $commission_id = MVX_Commission::create_commission($vendor_order_id);
@@ -54,12 +54,11 @@ class MVX_Calculate_Commission {
                 // Calculate commission
                 MVX_Commission::calculate_commission($commission_id, $vendor_order);
                 //update_post_meta($commission_id, '_paid_status', 'unpaid'); // moved to create_commission() for proper ledger update
-                // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":comission: " . $commission_id . ' : '  . "\n", FILE_APPEND);
-        
+                
                 // add commission id with associated vendor order
-                update_mvx_vendor_order_data($vendor_order_id, '_commission_id', $commission_id);
+                update_post_meta($vendor_order_id, '_commission_id', $commission_id);
                 // Mark commissions as processed
-                update_mvx_vendor_order_data($vendor_order_id, '_commissions_processed', 'yes');
+                update_post_meta($vendor_order_id, '_commissions_processed', 'yes');
                 
                 do_action( 'mvx_after_calculate_commission', $commission_id, $vendor_order_id );
             }
@@ -78,22 +77,22 @@ class MVX_Calculate_Commission {
             $suborders = get_mvx_suborders( $order_id, false, false);
             if( $suborders ) {
                 foreach ( $suborders as $v_order_id ) {
-                    $mvx_order_version = get_mvx_vendor_order_data( $v_order_id, '_mvx_order_version', true );
-                    $already_triggered = get_mvx_vendor_order_data( $v_order_id, '_mvx_vendor_new_order_mail_triggered', true );
+                    $mvx_order_version = get_post_meta( $v_order_id, '_mvx_order_version', true );
+                    $already_triggered = get_post_meta( $v_order_id, '_mvx_vendor_new_order_mail_triggered', true );
                     if( version_compare( $mvx_order_version, '3.4.2', '>=') && !$already_triggered ){
                         $email_admin = WC()->mailer()->emails['WC_Email_Vendor_New_Order'];
                         $result = $email_admin->trigger( $v_order_id );
-                        if( $result ) update_mvx_vendor_order_data( $v_order_id, '_mvx_vendor_new_order_mail_triggered', true );
+                        if( $result ) update_post_meta( $v_order_id, '_mvx_vendor_new_order_mail_triggered', true );
                     }
                 }
             }
         }elseif( is_mvx_vendor_order( $order_id ) ){
-            $mvx_order_version = get_mvx_vendor_order_data( $order_id, '_mvx_order_version', true );
-            $already_triggered = get_mvx_vendor_order_data( $order_id, '_mvx_vendor_new_order_mail_triggered', true );
+            $mvx_order_version = get_post_meta( $order_id, '_mvx_order_version', true );
+            $already_triggered = get_post_meta( $order_id, '_mvx_vendor_new_order_mail_triggered', true );
             if( version_compare( $mvx_order_version, '3.4.2', '>=') && !$already_triggered ){
                 $email_admin = WC()->mailer()->emails['WC_Email_Vendor_New_Order'];
                 $result = $email_admin->trigger( $order_id );
-                if( $result ) update_mvx_vendor_order_data( $order_id, '_mvx_vendor_new_order_mail_triggered', true );
+                if( $result ) update_post_meta( $order_id, '_mvx_vendor_new_order_mail_triggered', true );
             }
         }
         
@@ -108,12 +107,12 @@ class MVX_Calculate_Commission {
     public function mvx_create_commission_refunds($vendor_order_id, $refund_id) {
         $order = wc_get_order($vendor_order_id);
         $refund = new WC_Order_Refund($refund_id);
-        $commission_id = get_mvx_vendor_order_data($vendor_order_id, '_commission_id', true);
-        $vendor_id = get_mvx_vendor_order_data($vendor_order_id, '_vendor_id', true);
-        $commission_amount = get_mvx_order_commission_data($commission_id, '_commission_amount', true);
-        $included_coupon = get_mvx_order_commission_data($commission_id, '_commission_include_coupon', true) ? true : false;
-        $included_tax = get_mvx_order_commission_data($commission_id, '_commission_total_include_tax', true) ? true : false;
-        $items_commission_rates = get_mvx_vendor_order_data($vendor_order_id, 'order_items_commission_rates', true);
+        $commission_id = get_post_meta($vendor_order_id, '_commission_id', true);
+        $vendor_id = get_post_meta($vendor_order_id, '_vendor_id', true);
+        $commission_amount = get_post_meta($commission_id, '_commission_amount', true);
+        $included_coupon = get_post_meta($commission_id, '_commission_include_coupon', true) ? true : false;
+        $included_tax = get_post_meta($commission_id, '_commission_total_include_tax', true) ? true : false;
+        $items_commission_rates = get_post_meta($vendor_order_id, 'order_items_commission_rates', true);
         
         $refunded_total = $refunds = $global_refunds = $commission_refunded_items = array();
 
@@ -122,8 +121,8 @@ class MVX_Calculate_Commission {
             foreach ($order->get_refunds() as $_refund) {
                 $line_items_refund = $shipping_item_refund = $tax_item_refund = $amount = $refund_item_totals = 0;
                 // if commission refund exists
-                if (get_mvx_order_commission_data($_refund->get_id(), '_refunded_commissions', true)) {
-                    $commission_amt = get_mvx_order_commission_data($_refund->get_id(), '_refunded_commissions', true);
+                if (get_post_meta($_refund->get_id(), '_refunded_commissions', true)) {
+                    $commission_amt = get_post_meta($_refund->get_id(), '_refunded_commissions', true);
                     $refunds[$_refund->get_id()][$commission_id] = $commission_amt[$commission_id];
                 }
                 /** WC_Order_Refund items **/
@@ -159,14 +158,14 @@ class MVX_Calculate_Commission {
                 $refunds[$_refund->get_id()][$commission_id]['line_item'] = $refund_item_totals;
                 
                 if($line_items_commission_refund != 0){
-                    update_mvx_order_commission_data( $commission_id, '_commission_refunded_items', $line_items_commission_refund );
-                    update_mvx_order_commission_data( $commission_id, '_commission_refunded_items_data', $commission_refunded_items );
+                    update_post_meta( $commission_id, '_commission_refunded_items', $line_items_commission_refund );
+                    update_post_meta( $commission_id, '_commission_refunded_items_data', $commission_refunded_items );
                 }
                 
                 /** WC_Order_Refund shipping **/
                 $refund_shipping_totals = 0;
                 foreach ($_refund->get_items('shipping') as $item_id => $item) { 
-                    if ( 0 < get_mvx_order_commission_data($commission_id, '_shipping', true) && get_mvx_order_commission_data($commission_id, '_commission_total_include_shipping', true) ){
+                    if ( 0 < get_post_meta($commission_id, '_shipping', true) && get_post_meta($commission_id, '_commission_total_include_shipping', true) ){
                         if($item['total'] != 0){
                             $shipping_item_refund += $item['total'];
                             $refund_shipping_totals += $item['total'];
@@ -177,13 +176,13 @@ class MVX_Calculate_Commission {
                     $amount = $shipping_item_refund;
                     if( $refund_shipping_totals )
                         $refunds[$_refund->get_id()][$commission_id]['shipping'] = $refund_shipping_totals;
-                    update_mvx_order_commission_data( $commission_id, '_commission_refunded_shipping', $shipping_item_refund );
+                    update_post_meta( $commission_id, '_commission_refunded_shipping', $shipping_item_refund );
                 }
                 
                 /** WC_Order_Refund tax **/
                 $refund_tax_totals = 0;
                 foreach ($_refund->get_items('tax') as $item_id => $item) { 
-                    if ( 0 < get_mvx_order_commission_data($commission_id, '_tax', true) && get_mvx_order_commission_data($commission_id, '_commission_total_include_tax', true) ){
+                    if ( 0 < get_post_meta($commission_id, '_tax', true) && get_post_meta($commission_id, '_commission_total_include_tax', true) ){
                         if($item['tax_total'] != 0 || $item['shipping_tax_total'] != 0){
                             $tax_item_refund += $item['tax_total'] + $item['shipping_tax_total'];
                             $refund_tax_totals += $item['tax_total'] + $item['shipping_tax_total'];
@@ -194,7 +193,7 @@ class MVX_Calculate_Commission {
                     $amount = $tax_item_refund;
                     if( $refund_tax_totals )
                         $refunds[$_refund->get_id()][$commission_id]['tax'] = $refund_tax_totals;
-                    update_mvx_order_commission_data( $commission_id, '_commission_refunded_tax', $tax_item_refund );
+                    update_post_meta( $commission_id, '_commission_refunded_tax', $tax_item_refund );
                 }
                 
                 // if global refund applied in this refund
@@ -210,18 +209,18 @@ class MVX_Calculate_Commission {
                 //$rate_to_refund = $_refund->get_amount() / $order->get_total();
                 //$commission_total = MVX_Commission::commission_totals($commission_id, 'edit');
 
-                if(!get_mvx_order_commission_data($_refund->get_id(), '_refunded_commissions', true)){
+                if(!get_post_meta($_refund->get_id(), '_refunded_commissions', true)){
                     $refunds[$_refund->get_id()][$commission_id]['global'] = $_refund->get_amount() * -1;
                     $global_commission_refund += $_refund->get_amount() * -1;
                 }else{
-                    $refunded_commission = get_mvx_order_commission_data($_refund->get_id(), '_refunded_commissions', true);
+                    $refunded_commission = get_post_meta($_refund->get_id(), '_refunded_commissions', true);
                     $refunded_commission_amt_data = isset($refunded_commission[$commission_id]) ? $refunded_commission[$commission_id] : array();
                     $refunded_commission_amt = array_sum($refunded_commission_amt_data);
                     $global_commission_refund += $refunded_commission_amt;
                 }
             }
             if($global_commission_refund != 0){
-                update_mvx_order_commission_data( $commission_id, '_commission_refunded_global', $global_commission_refund );
+                update_post_meta( $commission_id, '_commission_refunded_global', $global_commission_refund );
             }
        
             // update the refunded commissions in the order to easy manage these in future
@@ -251,19 +250,19 @@ class MVX_Calculate_Commission {
                     }
                     $refunded_amt_total += $comm_refunded_amt;
 
-                    update_mvx_order_commission_data( $_refund_id, '_refunded_commissions', $commissions_refunded );
-                    update_mvx_order_commission_data( $_refund_id, '_refunded_commissions_total', $commissions_refunded_total );
+                    update_post_meta( $_refund_id, '_refunded_commissions', $commissions_refunded );
+                    update_post_meta( $_refund_id, '_refunded_commissions_total', $commissions_refunded_total );
                 }
                 
-                update_mvx_order_commission_data( $commission_id, '_commission_refunded_data', $refunds );
-                update_mvx_order_commission_data( $commission_id, '_commission_refunded', $refunded_amt_total );
+                update_post_meta( $commission_id, '_commission_refunded_data', $refunds );
+                update_post_meta( $commission_id, '_commission_refunded', $refunded_amt_total );
                 // Trigger notification emails.
                 if ( MVX_Commission::commission_totals($commission_id, 'edit') == 0  ) {
                     do_action( 'mvx_commission_fully_refunded', $commission_id, $order );
-                    update_mvx_order_commission_data($commission_id, '_paid_status', 'refunded'); 
+                    update_post_meta($commission_id, '_paid_status', 'refunded'); 
                 } else {
                     do_action( 'mvx_commission_partially_refunded', $commission_id, $order );
-                    update_mvx_order_commission_data($commission_id, '_paid_status', 'partial_refunded');
+                    update_post_meta($commission_id, '_paid_status', 'partial_refunded');
                 }
                 /**
                  * Action hook after commission refund save.
@@ -305,7 +304,7 @@ class MVX_Calculate_Commission {
      *
      * @param int $order_id
      */
-    public function mvx_due_commission_reverse($order_id) {die;
+    public function mvx_due_commission_reverse($order_id) {
         $args = array(
             'post_type' => 'dc_commission',
             'post_status' => array('publish', 'private'),
@@ -318,10 +317,10 @@ class MVX_Calculate_Commission {
                 )
             )
         );
-        $commissions = get_mvx_order_commission_datas($args);
+        $commissions = get_posts($args);
         if ($commissions) {
             foreach ($commissions as $commission) {
-                update_mvx_order_commission_data($commission->ID, '_paid_status', 'reverse');
+                update_post_meta($commission->ID, '_paid_status', 'reverse');
             }
         }
     }
@@ -347,12 +346,12 @@ class MVX_Calculate_Commission {
         global $wpdb;
         // Only process commissions once
         $order = wc_get_order($order_id);
-        $processed = get_mvx_vendor_order_data($order_id, '_commissions_processed', true);
-        $order_processed = get_mvx_vendor_order_data($order_id, '_mvx_order_processed', true);
+        $processed = get_post_meta($order_id, '_commissions_processed', true);
+        $order_processed = get_post_meta($order_id, '_mvx_order_processed', true);
         if (!$order_processed) {
             mvx_process_order($order_id, $order);
         }
-        $commission_ids = get_mvx_vendor_order_data($order_id, '_commission_ids', true) ? get_mvx_vendor_order_data($order_id, '_commission_ids', true) : array();
+        $commission_ids = get_post_meta($order_id, '_commission_ids', true) ? get_post_meta($order_id, '_commission_ids', true) : array();
         if (!$processed) {
             $vendor_array = array();
             $items = $order->get_items('line_item');
@@ -378,11 +377,11 @@ class MVX_Calculate_Commission {
                         $query_id = $product_id;
                     }
                     $commission = $vendor_obj->get_vendor_commissions_by_product($order_id, $query_id);
-                    $previous_ids = get_mvx_order_commission_data($commission[0], '_commission_product', true);
+                    $previous_ids = get_post_meta($commission[0], '_commission_product', true);
                     if (is_array($previous_ids)) {
                         array_push($previous_ids, $query_id);
                     }
-                    update_mvx_order_commission_data($commission[0], '_commission_product', $previous_ids);
+                    update_post_meta($commission[0], '_commission_product', $previous_ids);
 
                     $item_commission = $this->get_item_commission($product_id, $variation_id, $item, $order_id, $item_id);
 
@@ -393,7 +392,7 @@ class MVX_Calculate_Commission {
                         $commission_id = $this->record_commission($product_id, $order_id, $variation_id, $order, $vendor_obj, $item_id, $item);
                         if ($commission_id) {
                             $commission_ids[] = $commission_id;
-                            update_mvx_order_commission_data($order_id, '_commission_ids', $commission_ids);
+                            update_post_meta($order_id, '_commission_ids', $commission_ids);
                         }
                         $vendor_array[] = $vendor_obj->term_id;
                     }
@@ -403,11 +402,11 @@ class MVX_Calculate_Commission {
             $email_admin->trigger($order_id);
         }
         // Mark commissions as processed
-        update_mvx_vendor_order_data($order_id, '_commissions_processed', 'yes');
+        update_post_meta($order_id, '_commissions_processed', 'yes');
         if (!empty($commission_ids) && is_array($commission_ids)) {
             foreach ($commission_ids as $commission_id) {
                 $commission_amount = get_mvx_vendor_order_amount(array('commission_id' => $commission_id, 'order_id' => $order_id));
-                update_mvx_order_commission_data($commission_id, '_commission_amount', (float) $commission_amount['commission_amount']);
+                update_post_meta($commission_id, '_commission_amount', (float) $commission_amount['commission_amount']);
             }
         }
     }
@@ -444,42 +443,33 @@ class MVX_Calculate_Commission {
         if ($vendor_id == 0) {
             return false;
         }
-        // $commission_data = array(
-        //     'post_type' => 'dc_commission',
-        //     'post_title' => sprintf(__('Commission - %s', 'multivendorx'), strftime(_x('%B %e, %Y @ %I:%M %p', 'Commission date parsed by strftime', 'multivendorx'), current_time('timestamp'))),
-        //     'post_status' => 'private',
-        //     'ping_status' => 'closed',
-        //     'post_excerpt' => '',
-        //     'post_author' => 1
-        // );
-        // $commission_id = wp_insert_post($commission_data);
-
         $commission_data = array(
-            '_commission_order_id' => $order_id,
-            // 'post_author' => $vendor_id,
-            // '_commission_vendor' => $vendor->term_id,
-            '_paid_status' => 'unpaid',
-            'status' => 'private'
+            'post_type' => 'dc_commission',
+            'post_title' => sprintf(__('Commission - %s', 'multivendorx'), strftime(_x('%B %e, %Y @ %I:%M %p', 'Commission date parsed by strftime', 'multivendorx'), current_time('timestamp'))),
+            'post_status' => 'private',
+            'ping_status' => 'closed',
+            'post_excerpt' => '',
+            'post_author' => 1
         );
-        $commission_id = insert_mvx_order_commission_data($commission_data);
+        $commission_id = wp_insert_post($commission_data);
         // Add meta data
         if ($vendor_id > 0) {
-            update_mvx_order_commission_data($commission_id, '_commission_vendor', $vendor_id);
+            update_post_meta($commission_id, '_commission_vendor', $vendor_id);
         }
         if ($variation_id > 0) {
-            update_mvx_order_commission_data($commission_id, '_commission_product', array($variation_id));
+            update_post_meta($commission_id, '_commission_product', array($variation_id));
         } else {
-            update_mvx_order_commission_data($commission_id, '_commission_product', array($product_id));
+            update_post_meta($commission_id, '_commission_product', array($product_id));
         }
         $shipping = (float) $amount['shipping'];
         $tax = (float) ($amount['tax'] + $amount['shipping_tax']);
-        update_mvx_order_commission_data($commission_id, '_shipping', $shipping);
-        update_mvx_order_commission_data($commission_id, '_tax', $tax);
+        update_post_meta($commission_id, '_shipping', $shipping);
+        update_post_meta($commission_id, '_tax', $tax);
         if ($order_id > 0) {
-            update_mvx_order_commission_data($commission_id, '_commission_order_id', $order_id);
+            update_post_meta($commission_id, '_commission_order_id', $order_id);
         }
         // Mark commission as unpaid
-        update_mvx_order_commission_data($commission_id, '_paid_status', 'unpaid');
+        update_post_meta($commission_id, '_paid_status', 'unpaid');
         $item_commission = $this->get_item_commission($product_id, $variation_id, $item, $order_id, $item_id);
         $wpdb->query($wpdb->prepare("UPDATE `{$wpdb->prefix}mvx_vendor_orders` SET commission_id = %d, commission_amount = %d WHERE order_id =%d AND order_item_id = %d AND product_id = %d", $commission_id, $item_commission, $order_id, $item_id, $product_id));
         do_action('mvx_vendor_commission_created', $commission_id);

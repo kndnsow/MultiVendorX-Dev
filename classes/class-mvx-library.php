@@ -19,7 +19,9 @@ class MVX_Library {
     public $jqvmap;
     public $dataTable_lib_url;
     public $vlite_lib_url;
-
+    public $css_lib_path;
+    public $css_lib_url;
+    
     public function __construct() {
 
         global $MVX;

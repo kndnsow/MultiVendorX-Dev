@@ -76,48 +76,37 @@ class MVX_Commission {
      */
     public static function create_commission($order_id, $args = array()) {
         if ($order_id) {
-            $vendor_id = get_mvx_vendor_order_data($order_id, '_vendor_id', true);
-            // for BW supports
-            $vendor = get_mvx_vendor( $vendor_id );
-            
-            $data = array(
-                '_commission_order_id' => $order_id,
-                'post_author' => $vendor_id,
-                '_commission_vendor' => $vendor->term_id,
-                '_paid_status' => 'unpaid',
-                'status' => 'private'
-            );
-            $commission_id = insert_mvx_order_commission_data($data);
+            $vendor_id = get_post_meta($order_id, '_vendor_id', true);
             // create vendor commission
-            // $default = array(
-            //     'post_type' => 'dc_commission',
-            //     'post_title' => sprintf(__('Commission - %s', 'multivendorx'), strftime(_x('%B %e, %Y @ %I:%M %p', 'Commission date parsed by strftime', 'multivendorx'), current_time('timestamp'))),
-            //     'post_status' => 'private',
-            //     'ping_status' => 'closed',
-            //     'post_excerpt' => '',
-            //     'post_author' => $vendor_id
-            // );
+            $default = array(
+                'post_type' => 'dc_commission',
+                'post_title' => sprintf(__('Commission - %s', 'multivendorx'), strftime(_x('%B %e, %Y @ %I:%M %p', 'Commission date parsed by strftime', 'multivendorx'), current_time('timestamp'))),
+                'post_status' => 'private',
+                'ping_status' => 'closed',
+                'post_excerpt' => '',
+                'post_author' => $vendor_id
+            );
 
-            // $commission_data = apply_filters('mvx_create_vendor_commission_args', wp_parse_args($args, $default));
+            $commission_data = apply_filters('mvx_create_vendor_commission_args', wp_parse_args($args, $default));
 
-            // $commission_id = wp_insert_post($commission_data);
-            // if ($commission_id) {
-            //     // add order id with commission meta
-            //     update_post_meta($commission_id, '_commission_order_id', $order_id);
-            //     update_post_meta($commission_id, '_paid_status', 'unpaid');
-            //     // for BW supports
-            //     $vendor = get_mvx_vendor( $vendor_id );
-            //     update_post_meta($commission_id, '_commission_vendor', $vendor->term_id);
-            //     /**
-            //      * Action hook to update commission meta data.
-            //      *
-            //      * @since 3.4.0
-            //      */
-            //     do_action('mvx_commission_update_commission_meta', $commission_id);
+            $commission_id = wp_insert_post($commission_data);
+            if ($commission_id) {
+                // add order id with commission meta
+                update_post_meta($commission_id, '_commission_order_id', $order_id);
+                update_post_meta($commission_id, '_paid_status', 'unpaid');
+                // for BW supports
+                $vendor = get_mvx_vendor( $vendor_id );
+                update_post_meta($commission_id, '_commission_vendor', $vendor->term_id);
+                /**
+                 * Action hook to update commission meta data.
+                 *
+                 * @since 3.4.0
+                 */
+                do_action('mvx_commission_update_commission_meta', $commission_id);
 
-            //     self::add_commission_note($commission_id, sprintf(__('Commission for order <a href="%s">(ID : %s)</a> is created.', 'multivendorx'), get_admin_url() . 'post.php?post=' . $order_id . '&action=edit', $order_id), $vendor_id);
+                self::add_commission_note($commission_id, sprintf(__('Commission for order <a href="%s">(ID : %s)</a> is created.', 'multivendorx'), get_admin_url() . 'post.php?post=' . $order_id . '&action=edit', $order_id), $vendor_id);
                 return $commission_id;
-            // }
+            }
         }
         return false;
     }
@@ -133,7 +122,7 @@ class MVX_Commission {
         global $MVX;
         if ($commission_id && $order) {
             $commission_type = mvx_get_settings_value($MVX->vendor_caps->payment_cap['commission_type']);
-            $vendor_id = get_mvx_vendor_order_data($order->get_id(), '_vendor_id', true);
+            $vendor_id = get_post_meta($order->get_id(), '_vendor_id', true);
              // line item commission
              $commission_amount = $shipping_amount = $tax_amount = $shipping_tax_amount = 0;
              $commission_rates = array();
@@ -154,7 +143,7 @@ class MVX_Commission {
                     $commission_rates[$item_id] = $commission_rate;
                 }
             } else {
-                $commission_rates = get_mvx_vendor_order_data($order->get_id(), 'order_items_commission_rates', true);
+                $commission_rates = get_post_meta($order->get_id(), 'order_items_commission_rates', true);
                 foreach ($order->get_items() as $item_id => $item) {
                     $product = $item->get_product();
                     $meta_data = $item->get_meta_data();
@@ -185,7 +174,7 @@ class MVX_Commission {
              *
              * @since 3.4.0
             */
-            update_mvx_vendor_order_data($order->get_id(), 'order_items_commission_rates', apply_filters('mvx_vendor_order_items_commission_rates', $commission_rates, $order));
+            update_post_meta($order->get_id(), 'order_items_commission_rates', apply_filters('mvx_vendor_order_items_commission_rates', $commission_rates, $order));
             
             // transfer shipping charges
             if ($MVX->vendor_caps->vendor_payment_settings('give_shipping') && !get_user_meta($vendor_id, '_vendor_give_shipping', true)) {
@@ -216,15 +205,15 @@ class MVX_Commission {
             
             // update commission meta
             if (0 < $order->get_total_discount() && isset($MVX->vendor_caps->payment_cap['commission_include_coupon']))
-                update_mvx_order_commission_data($commission_id, '_commission_include_coupon', true);
+                update_post_meta($commission_id, '_commission_include_coupon', true);
             if ( 0 < $shipping_amount && $MVX->vendor_caps->vendor_payment_settings('give_shipping') && !get_user_meta($vendor_id, '_vendor_give_shipping', true))
-                update_mvx_order_commission_data( $commission_id, '_commission_total_include_shipping', true );
+                update_post_meta( $commission_id, '_commission_total_include_shipping', true );
             if ( 0 < $tax_amount && $MVX->vendor_caps->vendor_payment_settings('give_tax') && !get_user_meta($vendor_id, '_vendor_give_tax', true))
-                update_mvx_order_commission_data( $commission_id, '_commission_total_include_tax', true );
+                update_post_meta( $commission_id, '_commission_total_include_tax', true );
             
-            update_mvx_order_commission_data( $commission_id, '_commission_amount', $commission_amount );
-            update_mvx_order_commission_data( $commission_id, '_shipping', $shipping_amount );
-            update_mvx_order_commission_data( $commission_id, '_tax', ($tax_amount + $shipping_tax_amount) );
+            update_post_meta( $commission_id, '_commission_amount', $commission_amount );
+            update_post_meta( $commission_id, '_shipping', $shipping_amount );
+            update_post_meta( $commission_id, '_tax', ($tax_amount + $shipping_tax_amount) );
             /**
              * Action hook to update commission meta data.
              *
@@ -233,7 +222,7 @@ class MVX_Commission {
             do_action('mvx_commission_before_save_commission_total', $commission_id);
             $commission_total = (float) $commission_amount + (float) $shipping_amount + (float) $tax_amount + (float) $shipping_tax_amount;
             $commission_total = apply_filters('mvx_commission_total_amount', $commission_total, $commission_id);
-            update_mvx_order_commission_data( $commission_id, '_commission_total', $commission_total );
+            update_post_meta( $commission_id, '_commission_total', $commission_total );
             do_action( 'mvx_commission_after_save_commission_total', $commission_id, $order );
 
         }
@@ -248,7 +237,7 @@ class MVX_Commission {
      */
     public static function get_status( $commission_id, $context = 'view' ) {
         if($commission_id){
-            $status = get_mvx_order_commission_data($commission_id, '_paid_status', true);
+            $status = get_post_meta($commission_id, '_paid_status', true);
             $status_view = ucfirst(str_replace('_', ' ', $status));
             return $context == 'view' ? $status_view : $status;
         }
@@ -262,19 +251,18 @@ class MVX_Commission {
      */
     public static function commission_totals( $commission_id, $context = 'view' ) {
         if($commission_id){
-            $order_id = get_mvx_order_commission_data($commission_id, '_commission_order_id', true);
+            $order_id = get_post_meta($commission_id, '_commission_order_id', true);
             $order = wc_get_order($order_id);
-            $commission_total = get_mvx_order_commission_data( $commission_id, '_commission_total', true );
+            $commission_total = get_post_meta( $commission_id, '_commission_total', true );
             // backward compatibility added
             if(!$commission_total){
-                $commission_amt = get_mvx_order_commission_data($commission_id, '_commission_amount', true);
-                $shipping_amt = get_mvx_order_commission_data($commission_id, '_shipping', true);
-                $tax_amt = get_mvx_order_commission_data($commission_id, '_tax', true);
+                $commission_amt = get_post_meta($commission_id, '_commission_amount', true);
+                $shipping_amt = get_post_meta($commission_id, '_shipping', true);
+                $tax_amt = get_post_meta($commission_id, '_tax', true);
                 $commission_total = (floatval($commission_amt) + floatval($shipping_amt) + floatval($tax_amt));
             }
-            $commission_refunded_total = get_mvx_order_commission_data( $commission_id, '_commission_refunded', true );
+            $commission_refunded_total = get_post_meta( $commission_id, '_commission_refunded', true );
             $total = floatval($commission_total) + floatval($commission_refunded_total);
-            // file_put_contents( plugin_dir_path(__FILE__) . "/error.log",date("d/m/Y h:i:s a",time()). ": " . "comm total:: " . $commission_total . "\n", FILE_APPEND );
             if($order)
                 return $context == 'view' ? wc_price($total, array('currency' => $order->get_currency())) : $total;
         }
@@ -288,10 +276,10 @@ class MVX_Commission {
      */
     public static function commission_amount_totals( $commission_id, $context = 'view' ) {
         if($commission_id){
-            $order_id = get_mvx_order_commission_data($commission_id, '_commission_order_id', true);
+            $order_id = get_post_meta($commission_id, '_commission_order_id', true);
             $order = wc_get_order($order_id);
-            $commission_amount = get_mvx_order_commission_data( $commission_id, '_commission_amount', true );
-            $commission_refunded_amount = get_mvx_order_commission_data( $commission_id, '_commission_refunded_items', true );
+            $commission_amount = get_post_meta( $commission_id, '_commission_amount', true );
+            $commission_refunded_amount = get_post_meta( $commission_id, '_commission_refunded_items', true );
             $total = floatval($commission_amount) + floatval($commission_refunded_amount);
             if($order)
                 return $context == 'view' ? wc_price($total, array('currency' => $order->get_currency())) : $total;
@@ -306,9 +294,9 @@ class MVX_Commission {
      */
     public static function commission_refunded_totals( $commission_id, $context = 'view' ) {
         if($commission_id){
-            $order_id = get_mvx_order_commission_data($commission_id, '_commission_order_id', true);
+            $order_id = get_post_meta($commission_id, '_commission_order_id', true);
             $order = wc_get_order($order_id);
-            $commission_refunded = get_mvx_order_commission_data( $commission_id, '_commission_refunded', true );
+            $commission_refunded = get_post_meta( $commission_id, '_commission_refunded', true );
             return $context == 'view' ? wc_price($commission_refunded, array('currency' => $order->get_currency())) : $commission_refunded;
         }
     }
@@ -321,9 +309,9 @@ class MVX_Commission {
      */
     public static function commission_items_refunded_totals( $commission_id, $context = 'view' ) {
         if($commission_id){
-            $order_id = get_mvx_order_commission_data($commission_id, '_commission_order_id', true);
+            $order_id = get_post_meta($commission_id, '_commission_order_id', true);
             $order = wc_get_order($order_id);
-            $commission_refunded = get_mvx_order_commission_data( $commission_id, '_commission_refunded_items', true );
+            $commission_refunded = get_post_meta( $commission_id, '_commission_refunded_items', true );
             return $context == 'view' ? wc_price($commission_refunded, array('currency' => $order->get_currency())) : $commission_refunded;
         }
     }
@@ -336,10 +324,10 @@ class MVX_Commission {
      */
     public static function commission_shipping_totals( $commission_id, $context = 'view' ) {
         if($commission_id){
-            $order_id = get_mvx_order_commission_data($commission_id, '_commission_order_id', true);
+            $order_id = get_post_meta($commission_id, '_commission_order_id', true);
             $order = wc_get_order($order_id);
-            $shipping_amount = get_mvx_order_commission_data( $commission_id, '_shipping', true );
-            $commission_refunded_shipping = get_mvx_order_commission_data( $commission_id, '_commission_refunded_shipping', true );
+            $shipping_amount = get_post_meta( $commission_id, '_shipping', true );
+            $commission_refunded_shipping = get_post_meta( $commission_id, '_commission_refunded_shipping', true );
             $total = floatval($shipping_amount) + floatval($commission_refunded_shipping);
             return $context == 'view' ? wc_price($total, array('currency' => $order->get_currency())) : $total;
         }
@@ -353,10 +341,10 @@ class MVX_Commission {
      */
     public static function commission_tax_totals( $commission_id, $context = 'view' ) {
         if($commission_id){
-            $order_id = get_mvx_order_commission_data($commission_id, '_commission_order_id', true);
+            $order_id = get_post_meta($commission_id, '_commission_order_id', true);
             $order = wc_get_order($order_id);
-            $tax_amount = get_mvx_order_commission_data( $commission_id, '_tax', true );
-            $commission_refunded_tax = get_mvx_order_commission_data( $commission_id, '_commission_refunded_tax', true );
+            $tax_amount = get_post_meta( $commission_id, '_tax', true );
+            $commission_refunded_tax = get_post_meta( $commission_id, '_commission_refunded_tax', true );
             $total = floatval($tax_amount) + floatval($commission_refunded_tax);
             $currency = $order ? $order->get_currency() : get_woocommerce_currency();
             return $context == 'view' ? wc_price($total, array('currency' => $currency)) : $total;
@@ -397,9 +385,9 @@ class MVX_Commission {
         }
    
         $commissions = new WP_Query( $args );
-        if( $commissions->get_mvx_order_commission_datas() ) :
+        if( $commissions->get_posts() ) :
             $commission_amount = $shipping_amount = $tax_amount = $total = 0;
-            $commission_posts = apply_filters( 'mvx_before_get_commissions_total_data_commission_posts', $commissions->get_mvx_order_commission_datas(), $vendor_id, $args );
+            $commission_posts = apply_filters( 'mvx_before_get_commissions_total_data_commission_posts', $commissions->get_posts(), $vendor_id, $args );
             foreach ( $commission_posts as $commission_id ) {
                 $commission_amount += self::commission_amount_totals( $commission_id, 'edit' );
                 $shipping_amount += self::commission_shipping_totals( $commission_id, 'edit' );
@@ -488,7 +476,7 @@ class MVX_Commission {
         foreach ($post_ids as $post_id) {
             $commission = $this->get_commission($post_id);
             $vendor = $commission->vendor;
-            $commission_status = get_mvx_order_commission_data($post_id, '_paid_status', true);
+            $commission_status = get_post_meta($post_id, '_paid_status', true);
             if (in_array($commission_status, array( 'unpaid', 'partial_refunded' ))) {
                 $commission_to_pay[$vendor->term_id][] = $post_id;
             }
@@ -516,10 +504,10 @@ class MVX_Commission {
 
         if ($commission_id > 0) {
             // Get post data
-            $commission = get_mvx_order_commission_by_id($commission_id);
-            $commission_order_id = get_mvx_order_commission_data($commission_id, '_commission_order_id', true);
-            $created_via_mvx_order = get_mvx_vendor_order_data($commission_order_id, '_created_via', true);
-            $vendor_id = get_mvx_vendor_order_data($commission_order_id, '_vendor_id', true);
+            $commission = get_post($commission_id);
+            $commission_order_id = get_post_meta($commission_id, '_commission_order_id', true);
+            $created_via_mvx_order = get_post_meta($commission_order_id, '_created_via', true);
+            $vendor_id = get_post_meta($commission_order_id, '_vendor_id', true);
             if($created_via_mvx_order == 'mvx_vendor_order'){
                 $order = wc_get_order($commission_order_id);
                 $line_items = $order->get_items( 'line_item' );
@@ -533,12 +521,12 @@ class MVX_Commission {
                 $commission->vendor = $vendor;
             }else{
                 // Get meta data
-                $commission->product = get_mvx_order_commission_data($commission_id, '_commission_product', true);
-                $commission->vendor = get_mvx_vendor_by_term(get_mvx_order_commission_data($commission_id, '_commission_vendor', true));
+                $commission->product = get_post_meta($commission_id, '_commission_product', true);
+                $commission->vendor = get_mvx_vendor_by_term(get_post_meta($commission_id, '_commission_vendor', true));
             }
             
-            $commission->amount = apply_filters('mvx_post_commission_amount', get_mvx_order_commission_data($commission_id, '_commission_amount', true), $commission_id);
-            $commission->paid_status = get_mvx_order_commission_data($commission_id, '_paid_status', true);
+            $commission->amount = apply_filters('mvx_post_commission_amount', get_post_meta($commission_id, '_commission_amount', true), $commission_id);
+            $commission->paid_status = get_post_meta($commission_id, '_paid_status', true);
         }
 
         return $commission;
@@ -575,9 +563,9 @@ class MVX_Commission {
 	);
    
         $commissions = new WP_Query( apply_filters( 'mvx_get_unpaid_commissions_total_data_query_args', $args, $type, $vendor ) );
-        if( $commissions->get_mvx_order_commission_datas() ) :
+        if( $commissions->get_posts() ) :
             $commission_amount = $shipping_amount = $tax_amount = $total = 0;
-            $commission_posts = apply_filters( 'mvx_get_unpaid_commissions_total_data_query_posts', $commissions->get_mvx_order_commission_datas(), $vendor );
+            $commission_posts = apply_filters( 'mvx_get_unpaid_commissions_total_data_query_posts', $commissions->get_posts(), $vendor );
             foreach ( $commission_posts as $commission_id ) {
                 if( $type == 'withdrawable' ){
                     $order_id = mvx_get_commission_order_id( $commission_id );

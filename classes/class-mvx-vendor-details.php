@@ -458,7 +458,7 @@ class MVX_Vendor {
         if ( $vendor_orders ) {
             foreach ( $vendor_orders as $order_id ) {
                 if(get_post_status( $order_id ) === 'wc-cancelled') continue;
-                $commission_id = get_mvx_vendor_order_data( $order_id, '_commission_id', true );
+                $commission_id = get_post_meta( $order_id, '_commission_id', true );
                 $order_ids[$commission_id] = $order_id;
             }
         }
@@ -497,12 +497,12 @@ class MVX_Vendor {
                 $args = wp_parse_args( $more_args, $args );
             }
             
-            $commissions = get_mvx_order_commission_datas($args);
+            $commissions = get_posts($args);
         }
 
         if ( $commissions ) {
             foreach ( $commissions as $commission_id ) {
-                $order_id = get_mvx_order_commission_data( $commission_id, '_commission_order_id', true );
+                $order_id = get_post_meta( $commission_id, '_commission_order_id', true );
                 $order_ids[$commission_id] = $order_id;
             }
         }
@@ -604,11 +604,10 @@ public function get_vendor_orders_by_product($vendor_term_id, $product_id, $star
         if ($product_id && $order_id) {
             $commissions = false;
             $args = array(
-                // 'post_type' => 'dc_commission',
+                'post_type' => 'dc_commission',
                 'post_status' => array('publish', 'private'),
-                'fields' => 'ids',
-                // 'posts_per_page' => -1,
-                // 'order' => 'asc',
+                'posts_per_page' => -1,
+                'order' => 'asc',
                 'meta_query' => array(
                     array(
                         'key' => '_commission_order_id',
@@ -622,7 +621,7 @@ public function get_vendor_orders_by_product($vendor_term_id, $product_id, $star
                     ),
                 ),
             );
-            $commissions = get_mvx_order_commission_datas($args);
+            $commissions = get_posts($args);
 
             if (!empty($commissions)) {
                 foreach ($commissions as $commission) {
@@ -977,7 +976,7 @@ public function get_vendor_orders_by_product($vendor_term_id, $product_id, $star
                             $commission_id = $vendor_order->get_prop('_commission_id');
                             $commission_total += $vendor_order->get_commission_total( 'edit' );
 
-                            if( get_mvx_order_commission_data( $commission_id, '_paid_status', true ) == 'paid' ){
+                            if( get_post_meta( $commission_id, '_paid_status', true ) == 'paid' ){
                                  $net_withdrawal_balance += $vendor_order->get_commission_total( 'edit' );
                             }
                         } catch (Exception $ex) {
@@ -1065,7 +1064,7 @@ public function get_vendor_orders_by_product($vendor_term_id, $product_id, $star
      */
     public function set_order_shipped($order_id, $tracking_id = '', $tracking_url = '') {
         global $wpdb;
-        $shippers = get_mvx_vendor_order_data($order_id, 'dc_pv_shipped', true) ? get_mvx_vendor_order_data($order_id, 'dc_pv_shipped', true) : array();
+        $shippers = get_post_meta($order_id, 'dc_pv_shipped', true) ? get_post_meta($order_id, 'dc_pv_shipped', true) : array();
         if (!in_array($this->id, $shippers)) {
             $shippers[] = $this->id;
             $mails = WC()->mailer()->emails['WC_Email_Notify_Shipped'];
@@ -1073,9 +1072,9 @@ public function get_vendor_orders_by_product($vendor_term_id, $product_id, $star
                 $customer_email = get_post_meta($order_id, '_billing_email', true);
                 $mails->trigger($order_id, $customer_email, $this->term_id, array('tracking_id' => $tracking_id, 'tracking_url' => $tracking_url));
             }
-            update_mvx_vendor_order_data($order_id, 'dc_pv_shipped', $shippers);
+            update_post_meta($order_id, 'dc_pv_shipped', $shippers);
             // set new meta shipped
-            update_mvx_vendor_order_data($order_id, 'mvx_vendor_order_shipped', 1);
+            update_post_meta($order_id, 'mvx_vendor_order_shipped', 1);
         }
         do_action('mvx_vendors_vendor_ship', $order_id, $this->term_id);
         $order = wc_get_order($order_id);

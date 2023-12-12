@@ -484,7 +484,7 @@ class MVX_Migrator {
 	}
 
 	function mvx_get_products_by_vendor( $vendor_id = 0, $post_status = 'any', $custom_args = array() ) {
-		$vendor_product_list = array();die;
+		$vendor_product_list = array();
 
 		if( !$vendor_id ) return $vendor_product_list;
 		$vendor_id = absint( $vendor_id );
@@ -564,3 +564,4 @@ class MVX_Migrator {
 	}
 
 }
+

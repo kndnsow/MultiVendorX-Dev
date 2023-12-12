@@ -142,7 +142,7 @@ abstract class MVX_Payment_Gateway {
         $vendor_wise_order_total = array();
         if (is_array($this->commissions)) {
             foreach ($this->commissions as $commission) {
-                $order_id = get_mvx_order_commission_data($commission, '_commission_order_id', true);
+                $order_id = get_post_meta($commission, '_commission_order_id', true);
                 $order_charges = mvx_get_vendor_specific_order_charge($order_id);
                 $vendor_wise_order_total[$order_id] = array(
                     'order_total'       => $order_charges['order_total'],

@@ -24,30 +24,26 @@ function mvx_get_orders($args = array(), $return_type = 'ids', $subonly = false)
     
     $default = array(
 	'posts_per_page'   => -1,
-	// 'orderby'          => 'date',
+	'orderby'          => 'date',
 	'order'            => 'DESC',
-	// 'post_type'        => 'shop_order',
+	'post_type'        => 'shop_order',
 	'post_status'      => array('wc-processing', 'wc-completed'),
 	'fields'           => 'ids',
     );
     if( $subonly ) {
-        $default['meta_query'] = array(
-            array(
-                'key' => '_created_via',
-                'value' => 'mvx_vendor_order'
-            )
-        );
+        $default['meta_key'] = '_created_via';
+        $default['meta_value'] = 'mvx_vendor_order';
     }
     $args = wp_parse_args($args, $default);
-    // $query = new WP_Query( apply_filters( 'mvx_get_orders_query_args', $args ) );
+    $query = new WP_Query( apply_filters( 'mvx_get_orders_query_args', $args ) );
     if(strtolower($return_type) == 'object'){
         $orders = array();
-        foreach (get_mvx_vendor_order_datas($args) as $post_id) {
+        foreach ($query->get_posts() as $post_id) {
             $orders[$post_id] = wc_get_order($post_id);
         }
         return $orders;
     }
-    return get_mvx_vendor_order_datas($args);
+    return $query->get_posts();
 }
 
 /**
@@ -102,8 +98,8 @@ function is_mvx_vendor_order( $order, $current_vendor = false ) {
 function get_refund_commission_amount($refund_id, $context = 'view') {
     if( $refund_id ){
         $order_id = wp_get_post_parent_id( $refund_id );
-        $commission_id = get_mvx_vendor_order_data( $order_id, '_commission_id', true );
-        $commission_refunded_data = get_mvx_order_commission_data( $commission_id, '_commission_refunded_data', true );
+        $commission_id = get_post_meta( $order_id, '_commission_id', true );
+        $commission_refunded_data = get_post_meta( $commission_id, '_commission_refunded_data', true );
         if( isset($commission_refunded_data[$refund_id][$commission_id]) ){
             $refund_commission_data = $commission_refunded_data[$refund_id][$commission_id];
             return array_sum($refund_commission_data);
@@ -120,8 +116,8 @@ function get_refund_commission_amount($refund_id, $context = 'view') {
  */
 function mvx_get_total_refunded_for_item( $item_id, $order_id ) {
     if( $item_id && $order_id ) {
-        $commission_id = get_mvx_vendor_order_data( $order_id, '_commission_id', true );
-        $commission_refunded_items_data = get_mvx_order_commission_data( $commission_id, '_commission_refunded_items_data', true );
+        $commission_id = get_post_meta( $order_id, '_commission_id', true );
+        $commission_refunded_items_data = get_post_meta( $commission_id, '_commission_refunded_items_data', true );
         $refunds = wc_get_orders(
             array(
                 'type'   => 'shop_order_refund',
@@ -155,15 +151,14 @@ function mvx_get_total_refunded_for_item( $item_id, $order_id ) {
  */
 function get_mvx_suborders( $order_id, $args = array(), $object = true ) {
     $default = array(
-        'post_parent' => $order_id->get_id(),
-        // 'post_type' => 'shop_order',
-        // 'numberposts' => -1,
-        // 'post_status' => 'any'
+        'post_parent' => $order_id,
+        'post_type' => 'shop_order',
+        'numberposts' => -1,
+        'post_status' => 'any'
     );
     $args = ( $args ) ? wp_parse_args( $args, $default ) : $default;
     $orders = array();
-    $posts = get_mvx_vendor_order_datas( $default );
-    // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":orders:  : " . var_export($posts, true) . "\n", FILE_APPEND);
+    $posts = get_posts( $args );
     foreach ( $posts as $post ) {
         $orders[] = ( $object ) ? wc_get_order( $post->ID ) : $post->ID;
     }
@@ -210,7 +205,7 @@ function get_vendor_parent_shipping_item_id( $order_id, $vendor_id ) {
  * @return order ID
  */
 function mvx_get_commission_order_id( $commission_id ) {
-    $order_id = get_mvx_order_commission_data( $commission_id, '_commission_order_id', true );
+    $order_id = get_post_meta( $commission_id, '_commission_order_id', true );
     return ( $order_id ) ? $order_id : false;
 }
 
@@ -221,7 +216,7 @@ function mvx_get_commission_order_id( $commission_id ) {
  * @return commission ID
  */
 function mvx_get_order_commission_id( $order_id ) {
-    $commission_id = get_mvx_vendor_order_data( $order_id, '_commission_id', true );
+    $commission_id = get_post_meta( $order_id, '_commission_id', true );
     return ( $commission_id ) ? $commission_id : false;
 }
 
@@ -241,7 +236,7 @@ function mvx_get_customer_refund_order_msg( $order, $settings = array() ) {
         'order_refund_request_pending' => __( 'Your Request Is pending', 'multivendorx' ),
         'order_refund_request_accepted' => __( '*** Your Request is Accepted *** ', 'multivendorx' ),
     ), $order, $settings );
-    $cust_refund_status = get_mvx_vendor_order_data( $order->get_id(), '_customer_refund_order', true ) ? get_mvx_vendor_order_data( $order->get_id(), '_customer_refund_order', true ) : '';
+    $cust_refund_status = get_post_meta( $order->get_id(), '_customer_refund_order', true ) ? get_post_meta( $order->get_id(), '_customer_refund_order', true ) : '';
     $refund_days_limit = get_mvx_global_settings('refund_days') ? absint( get_mvx_global_settings('refund_days') ) : apply_filters( 'mvx_customer_refund_order_default_days_limit', 10, $order );
     $order_date = $order->get_date_created()->format('Y-m-d');
     $order_place_days = time() - strtotime( $order_date );

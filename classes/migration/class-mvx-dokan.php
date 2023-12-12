@@ -182,7 +182,7 @@ class MVX_Dokan {
 				) );
 
 				if ( !empty($woocommerce_orders) && wp_get_post_parent_id( $woocommerce_orders->ID ) != 0 ) {
-					$commission_id = get_mvx_vendor_order_data( $woocommerce_orders->ID, '_commission_id', true );
+					$commission_id = get_post_meta( $woocommerce_orders->ID, '_commission_id', true );
 					mvx_paid_commission_status($commission_id);
 				}
 			}

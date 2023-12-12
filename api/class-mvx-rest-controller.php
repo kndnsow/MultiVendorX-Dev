@@ -13,7 +13,6 @@
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
-
 /**
  * API class.
  */
@@ -23,6 +22,10 @@ class MVX_REST_API {
      *
      * @since 3.1
      */
+
+    public $MVX_REST_API_Vendors_Controller;
+    public $MVX_REST_API_Vendor_Reviews_Controller;
+
     public function __construct() {
 
         // Add query vars.
@@ -969,8 +972,8 @@ class MVX_REST_API {
         }
         if ($vendor) {
             $args = array(
-                'post_author' => $vendor->id,
-                // 'post_status' => 'any',
+                'author' => $vendor->id,
+                'post_status' => 'any',
                 
             );
             $vendor_all_orders = mvx_get_orders($args);
@@ -1014,9 +1017,9 @@ class MVX_REST_API {
     public function mvx_list_of_refund_request() {
         $lists = [];
         $default = array(
-            // 'posts_per_page'  => -1,
-            // 'post_type'       => 'shop_order',
-            // 'post_status'     => 'any',
+            'posts_per_page'  => -1,
+            'post_type'       => 'shop_order',
+            'post_status'     => 'any',
             'fields'          =>  'ids',
             'meta_query'      => array(
                     array(
@@ -1026,18 +1029,14 @@ class MVX_REST_API {
                     )
                 )
             );
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":orders:  : " . var_export(($default), true) . "\n", FILE_APPEND);
-        // $query = new WP_Query( $default ); //rename post_id to order_id
-        foreach (get_mvx_vendor_order_datas_for_refund($default) as $mvx_order) {
-            // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":orders:  : " . var_export(($post_id), true) . "\n", FILE_APPEND);
+        $query = new WP_Query( $default ); 
+        foreach ($query->get_posts() as $post_id) {
             $refund_status = '';
-            $order = wc_get_order($mvx_order->id);
-            // $post = get_mvx_vendor_order_by_id($post_id);
-            $vendor_id = get_mvx_vendor_order_data($mvx_order->id, '_vendor_id');
-            if (!is_user_mvx_vendor($vendor_id)) continue;
+            $order = wc_get_order($post_id);
+            $post = get_post($post_id);
+            if (!is_user_mvx_vendor($post->post_author)) continue;
             if (!$order) continue;
-            // $refund_status_raw = $order->get_meta('_customer_refund_order') ? $order->get_meta('_customer_refund_order') : '';
-            $refund_status_raw = get_mvx_vendor_order_data($mvx_order->id,'_customer_refund_order' ) ?? '';
+            $refund_status_raw = $order->get_meta('_customer_refund_order') ? $order->get_meta('_customer_refund_order') : '';
             switch ($refund_status_raw) {
                 case 'refund_request':
                     $refund_status = __('Refund Pending','multivendorx');
@@ -1055,10 +1054,10 @@ class MVX_REST_API {
 
             $lists[] = array(
                 'order_id'          =>  $order->get_id(),
-                'vendor'            =>  get_user_by('ID', $vendor_id)->display_name,
-                'refund_reason'     =>  get_mvx_vendor_order_data($mvx_order->id,'_customer_refund_order' ) ?? '-',
+                'vendor'            =>  get_user_by('ID', $post->post_author)->display_name,
+                'refund_reason'     =>  $order->get_meta('_customer_refund_reason') ? esc_html($order->get_meta('_customer_refund_reason')) : '-',
                 'refund_status'     =>  $refund_status,
-                'payment_gateway'   =>  wc_get_order(get_mvx_vendor_order_data($mvx_order->id,'post_parent'))->get_payment_method_title()
+                'payment_gateway'   =>  $order->get_payment_method_title()
             );
         }
         return rest_ensure_response($lists);
@@ -1067,18 +1066,17 @@ class MVX_REST_API {
     public function mvx_list_of_refunded_orders() {
         $lists = [];
         $default = array(
-            // 'posts_per_page'   => -1,
-            // 'post_type'        => 'shop_order',
-            // 'post_status' => 'any',
+            'posts_per_page'   => -1,
+            'post_type'        => 'shop_order',
+            'post_status' => 'any',
             'fields'    =>  'ids'
             );
-        // $query = new WP_Query( $default ); 
-        foreach (get_mvx_vendor_order_datas_for_refund($default) as $mvx_order) {
+        $query = new WP_Query( $default ); 
+        foreach ($query->get_posts() as $post_id) {
             $refund_amount = '';
-            $order = wc_get_order($mvx_order->id);
-            // $post = get_mvx_vendor_order_by_id($post_id);
-            $vendor_id = get_mvx_vendor_order_data($mvx_order->id, '_vendor_id');
-            if (!is_user_mvx_vendor($vendor_id)) continue;
+            $order = wc_get_order($post_id);
+            $post = get_post($post_id);
+            if (!is_user_mvx_vendor($post->post_author)) continue;
             if (!$order) continue;
             if (!$order->get_refunds()) continue;
 
@@ -1087,11 +1085,11 @@ class MVX_REST_API {
             }
 
             $lists[] = array(
-                'order_id'          =>  $mvx_order->id,
-                'vendor'            =>  get_user_by('ID', $vendor_id)->display_name,
-                'refund_reason'     =>  get_mvx_vendor_order_data($mvx_order->id,'_customer_refund_reason' ) ?? '-',
+                'order_id'          =>  $post_id,
+                'vendor'            =>  get_user_by('ID', $post->post_author)->display_name,
+                'refund_reason'     =>  $order->get_meta('_customer_refund_reason') ? esc_html($order->get_meta('_customer_refund_reason')) : '-',
                 'refunded_amount'   =>  $refund_amount,
-                'payment_gateway'   =>  wc_get_order(get_mvx_vendor_order_data($mvx_order->id,'post_parent'))->get_payment_method_title()
+                'payment_gateway'   =>  $order->get_payment_method_title()
             );
         }
         return rest_ensure_response($lists);
@@ -1140,8 +1138,8 @@ class MVX_REST_API {
 
         // order setails
         $args_multi_vendor = array(
-            // 'post_type' => 'shop_order',
-            // 'posts_per_page' => -1,
+            'post_type' => 'shop_order',
+            'posts_per_page' => -1,
             'post_status' => array('wc-processing', 'wc-completed'),
             'meta_query' => array(
                 array(
@@ -1151,12 +1149,12 @@ class MVX_REST_API {
                 )
             ),
         );
-        // $vendor_query = new WP_Query($args_multi_vendor);
-        if (!empty(get_mvx_vendor_order_datas($args_multi_vendor))) {
-            foreach (get_mvx_vendor_order_datas($args_multi_vendor) as $key_post => $value_post) {
+        $vendor_query = new WP_Query($args_multi_vendor);
+        if (!empty($vendor_query->get_posts())) {
+            foreach ($vendor_query->get_posts() as $key_post => $value_post) {
                 $order = wc_get_order( $value_post->ID );
                 if (!$order) continue;
-                if (get_mvx_vendor_order_data( $value_post->ID, '_customer_refund_order', true )) {
+                if (get_post_meta( $value_post->ID, '_customer_refund_order', true )) {
                     $store_order_refund_details[] = array('id' => $value_post->ID, 'date' =>  $value_post->post_date, 'customer'    =>  $order->get_billing_first_name());
                 }
                 $store_order_details[] = array('id' => $value_post->ID, 'date' =>  $value_post->post_date);
@@ -1177,15 +1175,11 @@ class MVX_REST_API {
         $args = array(
             'post_type' => 'dc_commission',
             'post_status' => array('publish', 'private'),
-            'meta_query' => array(
-                array(
-                    'key' => '_paid_status',
-                    'value' => 'paid',
-                    'compare' => '='
-                )
-            ),
+            'meta_key' => '_paid_status',
+            'meta_value' => 'paid',
+            'posts_per_page' => 5
         );
-        $commissions = get_mvx_order_commission_datas($args);
+        $commissions = get_posts($args);
         //mvx-vendor-application-content
         $applcation_data_display = '';
         //$applcation_data_display .= '<h2 class="mvx-text-with-right-side-line-wrapper">' . __("Seller's Latest Activity", 'multivendorx') . '<hr></h2>';
@@ -1266,8 +1260,8 @@ class MVX_REST_API {
 
                         $action_html = '';
                         if ($user->is_shipping_enable()) {
-                            $is_shipped = (array) get_mvx_vendor_order_data($pending_order->get_id(), 'dc_pv_shipped', true);
-                            $vendor_order_shipped = get_mvx_vendor_order_data($pending_order->get_id(), 'mvx_vendor_order_shipped');
+                            $is_shipped = (array) get_post_meta($pending_order->get_id(), 'dc_pv_shipped', true);
+                            $vendor_order_shipped = get_post_meta($pending_order->get_id(), 'mvx_vendor_order_shipped');
                             if (!in_array($user->id, $is_shipped) && !$vendor_order_shipped ) {
                                 $action_html .= '<a href="javascript:void(0)" title="' . __('Mark as shipped', 'multivendorx') . '" onclick="mvxMarkeAsShip(this,' . $pending_order->get_id() . ')"><i class="mvx-font ico-shippingnew-icon action-icon"></i></a> ';
                             } else {
@@ -1749,7 +1743,7 @@ class MVX_REST_API {
                 foreach ($commission_detail as $commission_id) {
                     mvx_paid_commission_status($commission_id);
                     $withdrawal_total = MVX_Commission::commission_totals($commission_id, 'edit');
-                    $order_id = get_mvx_order_commission_data( $commission_id, '_commission_order_id', true );
+                    $order_id = get_post_meta( $commission_id, '_commission_order_id', true );
                     $args = array(
                         'meta_query' => array(
                             array(
@@ -1967,7 +1961,7 @@ class MVX_REST_API {
                 foreach ($commission_detail as $commission_id) {
                     mvx_paid_commission_status($commission_id);
                     $withdrawal_total = MVX_Commission::commission_totals($commission_id, 'edit');
-                    $order_id = get_mvx_order_commission_data( $commission_id, '_commission_order_id', true );
+                    $order_id = get_post_meta( $commission_id, '_commission_order_id', true );
                     $args = array(
                         'meta_query' => array(
                             array(
@@ -2215,6 +2209,7 @@ class MVX_REST_API {
         foreach ($add_modules_details as $key_parent => $value_parent) {
             $total_number_of_modules[] = count($value_parent['options']);
         }
+        die;
         return rest_ensure_response(array_sum($total_number_of_modules));
     }
 
@@ -2718,7 +2713,7 @@ class MVX_REST_API {
                             foreach ($commission_detail as $commission_id) {
                                 mvx_paid_commission_status($commission_id);
                                 $withdrawal_total = MVX_Commission::commission_totals($commission_id, 'edit');
-                                $order_id = get_mvx_order_commission_data( $commission_id, '_commission_order_id', true );
+                                $order_id = get_post_meta( $commission_id, '_commission_order_id', true );
                                 $args = array(
                                     'meta_query' => array(
                                         array(
@@ -3142,7 +3137,7 @@ class MVX_REST_API {
                 $commission_details = get_post_meta($transaction->ID, 'commission_detail', true);
                 if ($commission_details) {
                     foreach ($commission_details as $commission_detail)
-                        $order_id[] = get_mvx_order_commission_data($commission_detail, '_commission_order_id', true);
+                        $order_id[] = get_post_meta($commission_detail, '_commission_order_id', true);
                 }
 
                 $pending_list[] = array(
@@ -4357,7 +4352,7 @@ class MVX_REST_API {
                         $link = admin_url('post.php?post=' . $ledger->order_id . '&action=edit');
                         $ref_link = '<a href="'.esc_url($link).'">#'.$ledger->order_id.'</a>';
                     } elseif ($ref_type == 'Refund' && $ref_type == 'Withdrawal') {
-                        $com_id = get_mvx_vendor_order_data( $ledger->order_id, '_commission_id', true );
+                        $com_id = get_post_meta( $ledger->order_id, '_commission_id', true );
                         $link = admin_url('post.php?post=' . $com_id . '&action=edit');
                         $ref_link = '<a href="'.esc_url($link).'">#'.$com_id.'</a>';
                     }
@@ -4399,7 +4394,7 @@ class MVX_REST_API {
 
 
         $qry = new WP_Query($args_overview);
-        $orders_overview = apply_filters('mvx_report_admin_overview_orders_overview', $qry->get_mvx_vendor_order_datas());
+        $orders_overview = apply_filters('mvx_report_admin_overview_orders_overview', $qry->get_posts());
         $sales_data_chart = array();
          if ( !empty( $orders_overview ) ) {
             foreach ( $orders_overview as $order_obj ) {
@@ -4697,7 +4692,7 @@ class MVX_REST_API {
 
                 $qry = new WP_Query($args);
 
-                $orders = apply_filters('mvx_filter_orders_report_vendor', $qry->get_mvx_vendor_order_datas());
+                $orders = apply_filters('mvx_filter_orders_report_vendor', $qry->get_posts());
 
                 if ( !empty( $orders ) ) {
                     foreach ( $orders as $order_obj ) {
@@ -4917,7 +4912,7 @@ class MVX_REST_API {
         if ( $value == 'paid' ) {
             $MVX->postcommission->mvx_mark_commission_paid( array( $commission_id ) ) ;
         } else {
-            update_mvx_order_commission_data($commission_id, '_paid_status', wc_clean(wp_unslash($value)));
+            update_post_meta($commission_id, '_paid_status', wc_clean(wp_unslash($value)));
         }
     }
 
@@ -4941,22 +4936,22 @@ class MVX_REST_API {
     public function mvx_details_specific_commission($request) {
         global $MVX;
         $commission_id = $request->get_param('commission_id') ? ($request->get_param('commission_id')) : 0;
-        $commission_order_id = get_mvx_order_commission_data($commission_id, '_commission_order_id', true);
+        $commission_order_id = get_post_meta($commission_id, '_commission_order_id', true);
         $order = wc_get_order($commission_order_id);
         if (!$order) return;
         $vendor_order = mvx_get_order($commission_order_id);
-        $commission_order_version = get_mvx_vendor_order_data($commission_order_id, '_order_version', true);
-        $post = get_mvx_order_commission_by_id($commission_id);
+        $commission_order_version = get_post_meta($commission_order_id, '_order_version', true);
+        $post = get_post($commission_id);
         $vendor = get_mvx_vendor($post->post_author);
         if (!$vendor) {
-            $vendor_id = get_mvx_vendor_order_data($commission_order_id, '_vendor_id', true);
+            $vendor_id = get_post_meta($commission_order_id, '_vendor_id', true);
             $vendor = get_mvx_vendor($vendor_id);
         }
         $commission_type_object = get_post_type_object( $post->post_type );
-        $shipping_amount   =  get_mvx_order_commission_data( $commission_id, '_shipping', true );
-        $tax_amount = get_mvx_order_commission_data( $commission_id, '_tax', true );
+        $shipping_amount   =  get_post_meta( $commission_id, '_shipping', true );
+        $tax_amount = get_post_meta( $commission_id, '_tax', true );
 
-        $commission_amount =  get_mvx_order_commission_data( $commission_id, '_commission_amount', true );
+        $commission_amount =  get_post_meta( $commission_id, '_commission_amount', true );
 
         $meta_list = $meta_list_associate_vendor = $shipping_items_meta_details = $line_items_meta_details = array();
 
@@ -5136,9 +5131,9 @@ class MVX_REST_API {
             }
         }
 
-        $commission_total = get_mvx_order_commission_data( $commission_id, '_commission_total', true );
-        $order_id = get_mvx_order_commission_data( $commission_id, '_commission_order_id', true );
-        $is_migration_order = get_mvx_vendor_order_data($order_id, '_order_migration', true); // backward compatibility
+        $commission_total = get_post_meta( $commission_id, '_commission_total', true );
+        $order_id = get_post_meta( $commission_id, '_commission_order_id', true );
+        $is_migration_order = get_post_meta($order_id, '_order_migration', true); // backward compatibility
         $notes = $MVX->postcommission->get_commission_notes($commission_id);
         $notes_data = [];
         if ($notes) {
@@ -5165,7 +5160,7 @@ class MVX_REST_API {
             'commission_total_calculate'    =>  MVX_Commission::commission_amount_totals($commission_id, 'edit'),
             'commission_totals' =>  '<del>' . wc_price($commission_amount, array('currency' => $order->get_currency())) . '</del> <ins>' . MVX_Commission::commission_amount_totals($commission_id).'</ins>',
             'commission_totals_else'    =>  MVX_Commission::commission_amount_totals($commission_id),
-            'shipping_amount'   =>  get_mvx_order_commission_data( $commission_id, '_shipping', true ),
+            'shipping_amount'   =>  get_post_meta( $commission_id, '_shipping', true ),
             'commission_shipping_totals'    =>  MVX_Commission::commission_shipping_totals($commission_id, 'edit'),
             'commission_shipping_totals_output' =>  '<del>' . wc_price($shipping_amount, array('currency' => $order->get_currency())) . '</del> <ins>' . MVX_Commission::commission_shipping_totals($commission_order_id, 'edit').'</ins>',
             'tax_amount'    =>  $tax_amount,
@@ -5178,11 +5173,11 @@ class MVX_REST_API {
             'line_items'    =>  $line_items_details,
 
             'order_total_discount'  =>  $order->get_total_discount(),
-            'commission_include_coupon' =>  get_mvx_order_commission_data($commission_id, '_commission_include_coupon', true),
-            'is_shipping'   =>   get_mvx_order_commission_data($commission_id, '_shipping', true),
-            'commission_total_include_shipping' =>  get_mvx_order_commission_data($commission_id, '_commission_total_include_shipping', true),
-            'is_tax'    =>  get_mvx_order_commission_data($commission_id, '_tax', true) ? get_mvx_order_commission_data($commission_id, '_tax', true) : 0,
-            'commission_total_include_tax'  =>  get_mvx_order_commission_data($commission_id, '_commission_total_include_tax', true),
+            'commission_include_coupon' =>  get_post_meta($commission_id, '_commission_include_coupon', true),
+            'is_shipping'   =>   get_post_meta($commission_id, '_shipping', true),
+            'commission_total_include_shipping' =>  get_post_meta($commission_id, '_commission_total_include_shipping', true),
+            'is_tax'    =>  get_post_meta($commission_id, '_tax', true) ? get_post_meta($commission_id, '_tax', true) : 0,
+            'commission_total_include_tax'  =>  get_post_meta($commission_id, '_commission_total_include_tax', true),
             'formated_commission_total' =>  $vendor_order->get_formatted_commission_total(),
             'get_total_shipping_refunded'   =>  $get_total_shipping_refunded,
             'refund_shipping_display'    => $order->get_shipping_total() ? '<del>' . strip_tags(wc_price($order->get_shipping_total(), array('currency' => $order->get_currency()))) . '</del> <ins>' . wc_price($order->get_shipping_total() - $get_total_shipping_refunded, array('currency' => $order->get_currency())) . '</ins>' : '',
@@ -5192,8 +5187,8 @@ class MVX_REST_API {
             'is_migration_order'    =>  $is_migration_order,
             'commission_total_edit' =>  MVX_Commission::commission_totals($commission_id, 'edit'),
             'commission_total_display'  => MVX_Commission::commission_totals($commission_id),
-            'is_refuned'    =>  get_mvx_order_commission_data( $commission_id, '_commission_refunded', true ),
-            'refunded_output'   =>  wc_price(get_mvx_order_commission_data( $commission_id, '_commission_refunded', true ), array('currency' => $order->get_currency())),
+            'is_refuned'    =>  get_post_meta( $commission_id, '_commission_refunded', true ),
+            'refunded_output'   =>  wc_price(get_post_meta( $commission_id, '_commission_refunded', true ), array('currency' => $order->get_currency())),
             'get_shipping_method'   =>  $order->get_shipping_methods(),
             'notes_data'    =>  $notes_data,
             'shipping_items_details'    =>  $shipping_items_details,
@@ -5363,10 +5358,10 @@ class MVX_REST_API {
             $currency = get_woocommerce_currency();
             foreach ($commission_list as $commission) {
                 $commission_data = $MVX->postcommission->get_commission($commission);
-                $commission_staus = get_mvx_order_commission_data($commission, '_paid_status', true);
+                $commission_staus = get_post_meta($commission, '_paid_status', true);
 
                 $product_list = '';
-                $order_id = get_mvx_order_commission_data($commission, '_commission_order_id', true);
+                $order_id = get_post_meta($commission, '_commission_order_id', true);
                 $order = wc_get_order($order_id);
                 if ( $order ) {
                     $line_items = $order->get_items( 'line_item' );
@@ -5377,14 +5372,14 @@ class MVX_REST_API {
                         $product_list .= $name . ' ';
                     }
                 }
-                $commission_details = get_mvx_order_commission_by_id($commission);
+                $commission_details = get_post($commission);
 
                 $recipient = get_user_meta($commission_data->vendor->id, '_vendor_paypal_email', true) ? get_user_meta($commission_data->vendor->id, '_vendor_paypal_email', true) : $commission_data->vendor->page_title;
-                $commission_amount = get_mvx_order_commission_data( $commission, '_commission_amount', true ) ? get_mvx_order_commission_data( $commission, '_commission_amount', true ) : 0;
-                $shipping_amount = get_mvx_order_commission_data( $commission, '_shipping', true ) ? get_mvx_order_commission_data( $commission, '_shipping', true ) : 0;
-                $tax_amount = get_mvx_order_commission_data( $commission, '_tax', true ) ? get_mvx_order_commission_data( $commission, '_tax', true ) : 0;
-                $commission_total = get_mvx_order_commission_data( $commission, '_commission_total', true ) ? get_mvx_order_commission_data( $commission, '_commission_total', true ) : 0;
-                $commission_order = get_mvx_order_commission_data($commission, '_commission_order_id', true) ? wc_get_order(get_mvx_order_commission_data($commission, '_commission_order_id', true)) : false;
+                $commission_amount = get_post_meta( $commission, '_commission_amount', true ) ? get_post_meta( $commission, '_commission_amount', true ) : 0;
+                $shipping_amount = get_post_meta( $commission, '_shipping', true ) ? get_post_meta( $commission, '_shipping', true ) : 0;
+                $tax_amount = get_post_meta( $commission, '_tax', true ) ? get_post_meta( $commission, '_tax', true ) : 0;
+                $commission_total = get_post_meta( $commission, '_commission_total', true ) ? get_post_meta( $commission, '_commission_total', true ) : 0;
+                $commission_order = get_post_meta($commission, '_commission_order_id', true) ? wc_get_order(get_post_meta($commission, '_commission_order_id', true)) : false;
                 if ($commission_order) $currency = $commission_order->get_currency();
                 $commissions_data[] = apply_filters('mvx_vendor_commissions', array(
                     __('Recipient', 'multivendorx')     =>  $recipient,
@@ -5439,7 +5434,6 @@ class MVX_REST_API {
     }
 
     public function mvx_find_specific_commission($request = '', $commission_ids = array(), $status = '', $vendor_name = '') {
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":orders:  : " . var_export($request, true) . "\n", FILE_APPEND);
         $date_range = $request && $request->get_param('date_range') ? $request->get_param('date_range') : '';
 
         $commission_list = array();
@@ -5454,9 +5448,9 @@ class MVX_REST_API {
         }
 
         $args = array(
-            // 'post_type' => 'dc_commission',
+            'post_type' => 'dc_commission',
             'post_status' => $status && $status == 'trash' ? array('trash') : array('publish', 'private', 'draft'),
-            // 'posts_per_page' => -1,
+            'posts_per_page' => -1,
             'fields' => 'ids',
             'date_query' => array(
                 'inclusive' => true,
@@ -5498,14 +5492,13 @@ class MVX_REST_API {
             );
 
         }
-        // echo 'hi';die;
-        $commissions = get_mvx_order_commission_datas( $args );
-        if ($commissions && !empty($commissions)) {
-            foreach ($commissions as $commission_value) {
-                // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":comission: " . json_encode($commission_value)  . "\n", FILE_APPEND);
 
-                $order_id = get_mvx_order_commission_data($commission_value, '_commission_order_id', true);
-                $commission_details = get_mvx_order_commission_by_id($commission_value);
+        $commissions = new WP_Query( apply_filters('mvx_commission_list_args', $args ) );
+        if ($commissions->get_posts() && !empty($commissions->get_posts())) {
+            foreach ($commissions->get_posts() as $commission_key => $commission_value) {
+
+                $order_id = get_post_meta($commission_value, '_commission_order_id', true);
+                $commission_details = get_post($commission_value);
 
                 $edit_url = 'post.php?post=' . $order_id . '&action=edit';
 
@@ -5516,7 +5509,7 @@ class MVX_REST_API {
                 $product_list = $vendor_list = $net_earning = $vendor_link = '';
 
                 // find vendor 
-                $vendor_user_id = get_mvx_order_commission_data($commission_value, '_commission_vendor', true);
+                $vendor_user_id = get_post_meta($commission_value, '_commission_vendor', true);
                 if ($vendor_user_id) {
                     $vendor = get_mvx_vendor_by_term($vendor_user_id);
                     if ($vendor) {
@@ -5553,7 +5546,7 @@ class MVX_REST_API {
                 }
 
                 // find amount
-                $commission_amount = get_mvx_order_commission_data($commission_value, '_commission_amount', true) ? wc_price(get_mvx_order_commission_data($commission_value, '_commission_amount', true)) : 0;
+                $commission_amount = get_post_meta($commission_value, '_commission_amount', true) ? wc_price(get_post_meta($commission_value, '_commission_amount', true)) : 0;
 
                 if ( $vendor_order ) {
                     $net_earning = $vendor_order->get_commission_total();
@@ -5574,10 +5567,10 @@ class MVX_REST_API {
                     </div>
                 ";
 
-                if (get_mvx_order_commission_data($commission_value, '_paid_status', true) == "paid") {
+                if (get_post_meta($commission_value, '_paid_status', true) == "paid") {
                     $status_display = "<p class='commission-status-paid'>" . __('Paid', 'multivendorx') . "</p>";
                 } else {
-                    $status_display = "<p class='commission-status-unpaid'>" . ucfirst(get_mvx_order_commission_data($commission_value, '_paid_status', true)) . "</p>";
+                    $status_display = "<p class='commission-status-unpaid'>" . ucfirst(get_post_meta($commission_value, '_paid_status', true)) . "</p>";
                 }
 
                 $commission_list[] = apply_filters('mvx_commissions_table_columns_data', array(
