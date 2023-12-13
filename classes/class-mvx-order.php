@@ -287,6 +287,8 @@ class MVX_Order {
 
     public function mvx_create_orders($order_id, $posted_data, $order, $backend = false) {
         global $MVX;
+        
+        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":orders:  : " . var_export($order_id, true) . "\n", FILE_APPEND);
         //check parent order exist
         if (wp_get_post_parent_id($order_id) != 0)
             return false;
@@ -328,6 +330,7 @@ class MVX_Order {
                 ), $backend);
             }
         }
+        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":mvx_create_orders orders:  : " . var_export($vendor_orders, true) . "\n", FILE_APPEND);
         if ($vendor_orders) :
             foreach ($vendor_orders as $vendor_order_id) {
                 do_action('mvx_checkout_vendor_order_processed', $vendor_order_id, $posted_data, $order);
@@ -456,6 +459,7 @@ class MVX_Order {
      */
     public static function create_vendor_order($order, $args = array(), $data_migration = false) {
         global $MVX;
+        
         $default_args = array(
             'vendor_id' => 0,
             'order_id' => 0,
@@ -492,13 +496,15 @@ class MVX_Order {
         if ($updating) {
             $vendor_order_id = wp_update_post($data);
         } else {
-            $vendor_order_id = wp_insert_post($data, true);
             if($MVX->hpos_is_enabled){
                 $data_new = array(
                     'post_date' => gmdate('Y-m-d H:i:s', $order->get_date_created('edit')->getOffsetTimestamp()),
-                    'post_id' => $vendor_order_id,
+                    // 'post_id' => $vendor_order_id,
                 );
                 $vendor_order_id = insert_mvx_vendor_order_data($data_new, $order, $args['vendor_id']);
+                // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":vendor_order_id:  : " . var_export($vendor_order_id, true) . "\n", FILE_APPEND);
+            } else {
+                $vendor_order_id = wp_insert_post($data, true);
             }
             
             $args['vendor_order_id'] = $vendor_order_id;
@@ -872,7 +878,7 @@ class MVX_Order {
         // parent order synchronization
         $parent_order_id = wp_get_post_parent_id( $order_id );
         if($parent_order_id){
-            remove_action('woocommerce_order_status_changed', array($this, 'mvx_parent_order_to_vendor_order_status_synchronization'), 90, 3);
+            remove_action('woocommerce_order_status_changed', array($this, 'mvx_parent_order_to_vendor_order_status_synchronization'), 90, 4);
             $status_to_sync = apply_filters('mvx_vendor_order_to_parent_order_statuses_to_sync',array('completed', 'refunded'));
 
             $mvx_suborders = get_mvx_suborders( $parent_order_id );
@@ -923,7 +929,7 @@ class MVX_Order {
                     }
                 }
             }
-            add_action('woocommerce_order_status_changed', array($this, 'mvx_parent_order_to_vendor_order_status_synchronization'), 90, 3);
+            add_action('woocommerce_order_status_changed', array($this, 'mvx_parent_order_to_vendor_order_status_synchronization'), 90, 4);
         }
     }
 

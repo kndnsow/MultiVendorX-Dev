@@ -80,7 +80,7 @@ class MVX_Commission {
             // create vendor commission
             $default = array(
                 'post_type' => 'dc_commission',
-                'post_title' => sprintf(__('Commission - %s', 'multivendorx'), strftime(_x('%B %e, %Y @ %I:%M %p', 'Commission date parsed by strftime', 'multivendorx'), current_time('timestamp'))),
+                'post_title' => sprintf(__('Commission - %s', 'multivendorx'), date(_x('F j, Y @ h:i a', 'Commission date parsed by date', 'multivendorx'), current_time('timestamp'))),
                 'post_status' => 'private',
                 'ping_status' => 'closed',
                 'post_excerpt' => '',
