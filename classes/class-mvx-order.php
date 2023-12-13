@@ -275,20 +275,18 @@ class MVX_Order {
         }
     }
     public function mvx_create_orders_hpos($order_id, $order) {
-        file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":hpos orders:  : " . var_export($order_id, true) . "\n", FILE_APPEND);
         $posted_data = array();
-        $this->mvx_create_orders($order_id, $posted_data, $order);
+        $this->mvx_create_orders($order_id, $posted_data, $order, false);
         
     }
 
     public function mvx_create_orders($order_id, $posted_data, $order, $backend = false) {
         global $MVX;
-        file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":orders:  : " . var_export($order_id, true) . "\n", FILE_APPEND);
         //check parent order exist
         if (wp_get_post_parent_id($order_id) != 0)
             return false;
 
-        $order = wc_get_order($order_id);
+        // $order = wc_get_order($order_id);
         $items = $order->get_items();
         $vendor_items = array();
 
