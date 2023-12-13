@@ -155,14 +155,14 @@ function get_mvx_suborders( $order_id, $args = array(), $object = true ) {
     global $MVX;
     $orders = array();
     if($MVX->hpos_is_enabled){
-        if(OrderUtil::is_order($order_id)){
+        if(!is_int($order_id)){
             $orders = wc_get_orders(array('parent' => $order_id->get_id()));
         } else {
             $default = array(
                 'parent' => $order_id,
             );
             $args = ( $args ) ? wp_parse_args( $args, $default ) : $default;
-            $orders = wc_get_orders($args); 
+            $orders = wc_get_orders($args);
         }
     } else {
         $default = array(
