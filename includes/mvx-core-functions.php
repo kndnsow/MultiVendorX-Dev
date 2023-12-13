@@ -8319,3 +8319,54 @@ if (!function_exists('mvxArrayToObject')) {
         }
     }
 }
+
+if(!function_exists('insert_mvx_vendor_order_data')){
+    function insert_mvx_vendor_order_data($data, $parent_order, $vendor_id) {
+       //createing sub order on wc_orders table
+        $order = new WC_Order($data['post_id']);
+        $meta = [
+            'cart_hash',
+            'customer_id',
+            'currency',
+            'prices_include_tax',
+            'customer_ip_address',
+            'customer_user_agent',
+            'customer_note',
+            'payment_method',
+            'payment_method_title',
+            'status',
+            'billing_country',
+            'billing_first_name',
+            'billing_last_name',
+            'billing_company',
+            'billing_address_1',
+            'billing_address_2',
+            'billing_city',
+            'billing_state',
+            'billing_postcode',
+            'billing_email',
+            'billing_phone',
+            'shipping_country',
+            'shipping_first_name',
+            'shipping_last_name',
+            'shipping_company',
+            'shipping_address_1',
+            'shipping_address_2',
+            'shipping_city',
+            'shipping_state',
+            'shipping_postcode',
+        ];
+        // save other details
+        $order->set_created_via( 'mvx_vendor_order' );
+        $order->calculate_totals();
+        $order->set_parent_id( $parent_order->get_id() );
+        $order->update_meta_data( '_vendor_id', $vendor_id );
+        foreach ( $meta as $key ) {
+            if ( is_callable( [ $order, "set_{$key}" ] ) ) {
+                $order->{"set_{$key}"}( $parent_order->{"get_{$key}"}() );
+            }
+        }
+        $order->save();
+        return $order->get_id();
+    }
+}

@@ -38,11 +38,16 @@ class MVX_Order {
             add_filter( 'woocommerce_customer_available_downloads', array($this, 'woocommerce_customer_available_downloads'), 99);
             add_action('mvx_frontend_enqueue_scripts', array($this, 'mvx_frontend_enqueue_scripts'));
             if( !is_user_mvx_vendor( get_current_user_id() ) ) {
-                add_filter('manage_shop_order_posts_columns', array($this, 'mvx_shop_order_columns'), 99);
-                add_action('manage_shop_order_posts_custom_column', array($this, 'mvx_show_shop_order_columns'), 99, 2);
+                if($MVX->hpos_is_enabled){
+                    add_filter('manage_woocommerce_page_wc-orders_columns', array($this, 'mvx_shop_order_columns'), 99);
+                    add_action('manage_woocommerce_page_wc-orders_custom_column', array($this, 'mvx_show_shop_order_columns'), 99, 2);
+                } else {
+                    add_filter('manage_shop_order_posts_columns', array($this, 'mvx_shop_order_columns'), 99);
+                    add_action('manage_shop_order_posts_custom_column', array($this, 'mvx_show_shop_order_columns'), 99, 2);
+                }
             }
             if(apply_filters('mvx_parent_order_to_vendor_order_status_synchronization', true))
-                add_action('woocommerce_order_status_changed', array($this, 'mvx_parent_order_to_vendor_order_status_synchronization'), 90, 3);
+                add_action('woocommerce_order_status_changed', array($this, 'mvx_parent_order_to_vendor_order_status_synchronization'), 90, 4);
             if(apply_filters('mvx_vendor_order_to_parent_order_status_synchronization', true))
                 add_action('woocommerce_order_status_changed', array($this, 'mvx_vendor_order_to_parent_order_status_synchronization'), 99, 3);
             // MVX create orders
@@ -252,7 +257,7 @@ class MVX_Order {
      */
     public function mvx_show_shop_order_columns($column, $post_id) {
         switch ($column) {
-            case 'mvx_suborder' :
+                case 'mvx_suborder' :
                 $mvx_suborders = get_mvx_suborders($post_id);
 
                 if ($mvx_suborders) {
@@ -262,7 +267,7 @@ class MVX_Order {
                         $vendor_page_title = ($vendor) ? $vendor->page_title : __('Deleted vendor', 'multivendorx');
                         $order_uri = apply_filters('mvx_admin_vendor_shop_order_edit_url', esc_url('post.php?post=' . $suborder->get_id() . '&action=edit'), $suborder->get_id());
 
-                        printf('<li><mark class="%s tips" data-tip="%s">%s</mark> <strong><a href="%s">#%s</a></strong> &ndash; <small class="mvx-order-for-vendor">%s %s</small></li>', sanitize_title($suborder->get_status()), $suborder->get_status(), $suborder->get_status(), $order_uri, $suborder->get_order_number(), _x('for', 'Order table details', 'multivendorx'), $vendor_page_title
+                        printf('<li><mark class="%s tips" data-tip="%s">%s</mark> <strong><a href="%s">#%s</a></strong> &ndash; <small class="mvx-order-for-vendor">%s %s</small></li>', sanitize_title($suborder->get_status()), $suborder->get_status(), $suborder->get_status(), $order_uri, $suborder->get_id(), _x('for', 'Order table details', 'multivendorx'), $vendor_page_title
                         );
 
                         do_action('mvx_after_suborder_details', $suborder);
@@ -289,7 +294,6 @@ class MVX_Order {
         // $order = wc_get_order($order_id);
         $items = $order->get_items();
         $vendor_items = array();
-
         foreach ($items as $item_id => $item) {
             if (isset($item['product_id']) && $item['product_id'] !== 0) {
                 // check vendor product
@@ -316,7 +320,7 @@ class MVX_Order {
         $vendor_orders = array();
         foreach ($vendor_items as $vendor_id => $items) {
             if (!empty($items)) {
-                $vendor_orders[] = self::create_vendor_order(array(
+                $vendor_orders[] = self::create_vendor_order($order, array(
                             'order_id' => $order_id,
                             'vendor_id' => $vendor_id,
                             'posted_data' => $posted_data,
@@ -450,7 +454,7 @@ class MVX_Order {
      * @param boolean $data_migration (default: false) for data migration
      * @return MVX_Order|WP_Error
      */
-    public static function create_vendor_order($args = array(), $data_migration = false) {
+    public static function create_vendor_order($order, $args = array(), $data_migration = false) {
         global $MVX;
         $default_args = array(
             'vendor_id' => 0,
@@ -461,7 +465,7 @@ class MVX_Order {
         );
 
         $args = wp_parse_args($args, $default_args);
-        $order = wc_get_order($args['order_id']);
+        // $order = wc_get_order($args['order_id']);
         if (!$order) return false;
         $data = array();
 
@@ -477,7 +481,7 @@ class MVX_Order {
                 'post_status' => 'wc-' . ( $order->get_status('edit') ? $order->get_status('edit') : apply_filters('mvx_create_vendor_order_default_order_status', 'pending') ),
                 'ping_status' => 'closed',
                 'post_author' => absint($args['vendor_id']),
-                'post_title' => sprintf(__('Vendor Order &ndash; %s', 'multivendorx'), strftime(_x('%B %e, %Y @ %I:%M %p', 'Commission date parsed by strftime', 'multivendorx'), current_time('timestamp'))),
+                'post_title' => sprintf(__('Vendor Order &ndash; %s', 'multivendorx'), date(_x('F j, Y @ h:i a', 'Commission date parsed by date', 'multivendorx'), current_time('timestamp'))),
                 'post_password' => uniqid('mvx_order_'),
                 'post_parent' => absint($args['order_id']),
                 'post_excerpt' => isset($args['posted_data']['order_comments']) ? $args['posted_data']['order_comments'] : '',
@@ -489,6 +493,14 @@ class MVX_Order {
             $vendor_order_id = wp_update_post($data);
         } else {
             $vendor_order_id = wp_insert_post($data, true);
+            if($MVX->hpos_is_enabled){
+                $data_new = array(
+                    'post_date' => gmdate('Y-m-d H:i:s', $order->get_date_created('edit')->getOffsetTimestamp()),
+                    'post_id' => $vendor_order_id,
+                );
+                $vendor_order_id = insert_mvx_vendor_order_data($data_new, $order, $args['vendor_id']);
+            }
+            
             $args['vendor_order_id'] = $vendor_order_id;
         }
 
@@ -496,7 +508,7 @@ class MVX_Order {
             return $vendor_order_id;
         }
 
-        $vendor_order = wc_get_order($vendor_order_id);
+        $vendor_order = wc_get_order($vendor_order_id);//hpos not supported
 
         $checkout_fields = array();
         if( !$data_migration ){
@@ -821,14 +833,14 @@ class MVX_Order {
         }
     }
 
-    public function mvx_parent_order_to_vendor_order_status_synchronization($order_id, $old_status, $new_status) {
+    public function mvx_parent_order_to_vendor_order_status_synchronization($order_id, $old_status, $new_status, $order) {
+        global $MVX;
         if(!$order_id) return;
         // Check order have status
         if (empty($new_status)) {
-            $order = wc_get_order($order_id);
+            // $order = wc_get_order($order_id);
             $new_status = $order->get_status('edit');
-        }
-        
+        }    
         $status_to_sync = apply_filters('mvx_parent_order_to_vendor_order_statuses_to_sync',array('on-hold', 'pending', 'processing', 'cancelled', 'failed'));
         if( in_array($new_status, $status_to_sync) ) :
             if (wp_get_post_parent_id( $order_id ) || get_post_meta($order_id, 'mvx_vendor_order_status_synchronized', true))
@@ -837,7 +849,7 @@ class MVX_Order {
             remove_action( 'woocommerce_order_status_completed', 'wc_paying_customer' );
             // Check if order have sub-order
             $mvx_suborders = get_mvx_suborders($order_id);
-
+                    
             if ($mvx_suborders) {
                 foreach ($mvx_suborders as $suborder) {
                     $suborder->update_status($new_status, _x('Update via parent order: ', 'Order note', 'multivendorx'));

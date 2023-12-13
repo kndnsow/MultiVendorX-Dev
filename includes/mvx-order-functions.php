@@ -1,5 +1,7 @@
 <?php
 
+use Automattic\WooCommerce\Utilities\OrderUtil;
+
 /**
  * MVX Order Functions
  *
@@ -150,18 +152,32 @@ function mvx_get_total_refunded_for_item( $item_id, $order_id ) {
  * @return object suborders.
  */
 function get_mvx_suborders( $order_id, $args = array(), $object = true ) {
-    $default = array(
-        'post_parent' => $order_id,
-        'post_type' => 'shop_order',
-        'numberposts' => -1,
-        'post_status' => 'any'
-    );
-    $args = ( $args ) ? wp_parse_args( $args, $default ) : $default;
+    global $MVX;
     $orders = array();
-    $posts = get_posts( $args );
-    foreach ( $posts as $post ) {
-        $orders[] = ( $object ) ? wc_get_order( $post->ID ) : $post->ID;
+    if($MVX->hpos_is_enabled){
+        if(OrderUtil::is_order($order_id)){
+            $orders = wc_get_orders(array('parent' => $order_id->get_id()));
+        } else {
+            $default = array(
+                'parent' => $order_id,
+            );
+            $args = ( $args ) ? wp_parse_args( $args, $default ) : $default;
+            $orders = wc_get_orders($args); 
+        }
+    } else {
+        $default = array(
+            'post_parent' => $order_id,
+            'post_type' => 'shop_order',
+            'numberposts' => -1,
+            'post_status' => 'any'
+        );
+        $args = ( $args ) ? wp_parse_args( $args, $default ) : $default;
+        $posts = get_posts( $args );
+        foreach ( $posts as $post ) {
+            $orders[] = ( $object ) ? wc_get_order( $post->ID ) : $post->ID;
+        }
     }
+    
     return $orders;
 }
 
