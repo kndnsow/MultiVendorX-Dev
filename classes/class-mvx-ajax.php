@@ -213,7 +213,7 @@ class MVX_Ajax {
         $vendor = get_current_vendor();
         
         $args = array(
-            'author' => $vendor->id,
+            // 'author' => $vendor->id,
             'post_status' => 'any',
             'date_query' => array(
                 array(
@@ -221,7 +221,9 @@ class MVX_Ajax {
                     'before'    => $end_date,
                     'inclusive' => true,
                 ),
-            )
+            ),
+            'meta_key' => '_vendor_id',
+            'meta_value' => $vendor->id,
         );
         $vendor_all_orders = apply_filters('mvx_datatable_get_vendor_all_orders', mvx_get_orders($args), $requestData, $_POST);
         

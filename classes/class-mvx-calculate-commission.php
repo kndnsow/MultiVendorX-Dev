@@ -42,6 +42,7 @@ class MVX_Calculate_Commission {
      */
     public function mvx_create_commission($vendor_order_id, $posted_data, $order) {
         global $MVX;
+        
         $processed = get_post_meta($vendor_order_id, '_commissions_processed', true);
         if (!$processed && apply_filters( 'wcmp_create_order_commissions_as_per_statuses', true, $vendor_order_id )) {
             //$commission_ids = get_post_meta($vendor_order_id, '_commission_ids', true) ? get_post_meta($vendor_order_id, '_commission_ids', true) : array();
@@ -54,12 +55,13 @@ class MVX_Calculate_Commission {
                 // Calculate commission
                 MVX_Commission::calculate_commission($commission_id, $vendor_order);
                 //update_post_meta($commission_id, '_paid_status', 'unpaid'); // moved to create_commission() for proper ledger update
-                
                 // add commission id with associated vendor order
-                update_post_meta($vendor_order_id, '_commission_id', $commission_id);
+                // $update_meta = update_post_meta($vendor_order_id, '_commission_id', $commission_id);
                 // Mark commissions as processed
-                update_post_meta($vendor_order_id, '_commissions_processed', 'yes');
-                
+                // update_post_meta($vendor_order_id, '_commissions_processed', 'yes');
+                $vendor_order->update_meta_data('_commission_id', $commission_id );
+                $vendor_order->update_meta_data('_commissions_processed', 'yes' );
+                $vendor_order->save();
                 do_action( 'mvx_after_calculate_commission', $commission_id, $vendor_order_id );
             }
         }

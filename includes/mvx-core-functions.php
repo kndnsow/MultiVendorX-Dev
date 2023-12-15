@@ -8367,6 +8367,11 @@ if(!function_exists('insert_mvx_vendor_order_data')){
             }
         }
         $order->save();
+
+        wp_update_post(array(
+            'ID' => $order->get_id(),
+            'post_author' => $vendor_id,
+        ));
         // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":order_id:  : " . var_export($order->get_id(), true) . "\n", FILE_APPEND);
 
         return $order->get_id();

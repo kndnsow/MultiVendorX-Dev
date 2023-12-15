@@ -97,6 +97,7 @@ class MVX_Commission {
                 // for BW supports
                 $vendor = get_mvx_vendor( $vendor_id );
                 update_post_meta($commission_id, '_commission_vendor', $vendor->term_id);
+                // add commission id with associated vendor order
                 /**
                  * Action hook to update commission meta data.
                  *

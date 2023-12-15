@@ -570,7 +570,7 @@ class MVX_Order {
         update_post_meta($vendor_order_id, '_mvx_order_version', $MVX->version);
         update_post_meta($vendor_order_id, '_vendor_id', absint($args['vendor_id']));
         update_post_meta($vendor_order_id, '_created_via', 'mvx_vendor_order');
-        
+        update_post_meta($vendor_order_id, '_commission_id', 84);
         if($data_migration)
             update_post_meta($vendor_order_id, '_order_migration', true);
 
@@ -1611,8 +1611,12 @@ class MVX_Order {
 
     public function mvx_refund_order_status_customer_meta(){
         global $post;
+        // echo $_GET['id'];die;
+        // $post = wc_get_order($_GET['id']);
+        // echo '<pre>';
+        // print_r( var_export($post, true)) ;die;
         if( $post && $post->post_type != 'shop_order' ) return;
-        if( !mvx_get_order( $post->ID ) ) return;
+        if( !mvx_get_order( $_GET['id'] ) ) return;
         add_meta_box( 'refund_status_customer', __('Customer refund status', 'multivendorx'),  array( $this, 'mvx_order_customer_refund_dd' ), 'shop_order', 'side', 'core' );
     }
 
