@@ -974,7 +974,6 @@ class MVX_Ajax {
         $proid = isset($_POST['proid']) ? wc_clean($_POST['proid']) : 0;
         if ($proid) {
             if (wp_delete_post($proid)) {
-                //echo 'success';
                 echo '{"status": "success", "shop_url": "' . get_permalink(wc_get_page_id('shop')) . '"}';
                 die;
             }
@@ -2905,7 +2904,6 @@ class MVX_Ajax {
         $taxonomy = isset($_POST['taxonomy']) ? wc_clean($_POST['taxonomy']) : '';
         $hierarchy = get_ancestors($term_id, $taxonomy);
         $html_level = $html_hierarchy = '';
-        //print_r($hierarchy);die;
         $level = 1;
         $parent = 0;
         if ($hierarchy) {

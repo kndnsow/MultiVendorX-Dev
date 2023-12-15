@@ -485,6 +485,7 @@ class MVX_Cron_Job {
                                             'posted_data' => array(),
                                             'line_items' => $vendor_items
                                     ), true);
+                                    $vendor_order = wc_get_order($vendor_order_id);
                                     // mark as shipped
                                     $shippers = get_post_meta($vorder->order_id, 'dc_pv_shipped', true) ? get_post_meta($vorder->order_id, 'dc_pv_shipped', true) : array();
                                     if (in_array($vendor->id, $shippers)) {
@@ -493,11 +494,11 @@ class MVX_Cron_Job {
                                         update_post_meta($vendor_order_id, 'mvx_vendor_order_shipped', 1);
                                     }
                                     // add commission id in order meta
-                                    update_post_meta($vendor_order_id, '_commission_id', $vorder->commission_id);
+                                    $vendor_order->update_meta_data('_commission_id', $vorder->commission_id);
                                     // add order id with commission meta
-                                    update_post_meta($vorder->commission_id, '_commission_order_id', $vendor_order_id);
+                                    $vendor_order->update_meta_data('_commission_order_id', $vendor_order_id);
                                     // for track BW vendor order-commission
-                                    update_post_meta($vendor_order_id, '_old_order_id', $vorder->order_id);
+                                    $vendor_order->update_meta_data('_old_order_id', $vorder->order_id);
                                     // prevent duplication
                                     update_post_meta($corder->order_id, '_mvx_vendor_specific_order_migrated', $vendor_specific_order_migrated);
                                     do_action( 'mvx_orders_migration_order_created', $vendor_order_id, $vorder );  

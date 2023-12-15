@@ -288,7 +288,7 @@ class MVX_Coupon {
         echo '</div>';
     }
     
-    function save_data_from_vendor_tab( $post_id, $coupon ) {
+    function save_data_from_vendor_tab( $coupon_id, $coupon ) {
         $select_vendor = isset( $_POST['select_vendor'] ) ? wc_clean( wp_unslash($_POST['select_vendor'])) : '';
         if (!empty($select_vendor) ) {
             $vendor = get_mvx_vendor($select_vendor);
@@ -296,10 +296,10 @@ class MVX_Coupon {
                 $vendor_products = $vendor->get_products_ids() ? wp_list_pluck( $vendor->get_products_ids(), 'ID' ) : array();
                 $product_count = count($vendor_products);
                 if ($product_count > 0) {
-                    wp_update_post(array('ID' => $post_id, 'post_author' => $select_vendor));
+                    wp_update_post(array('ID' => $coupon_id, 'post_author' => $select_vendor));
                     if (!isset($_POST['product_ids'])) {    
                         $v_products = $vendor_products ? implode(',', $vendor_products) : '';
-                        update_post_meta($post_id, 'product_ids', wc_clean($v_products));       
+                        update_post_meta($coupon_id, 'product_ids', wc_clean($v_products));       
                     }
                 } else {
                     WC_Admin_Meta_Boxes::add_error( __( 'Vendor not assigned, because vendor has no products.', 'multivendorx' ) );

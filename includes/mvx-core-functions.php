@@ -1868,7 +1868,7 @@ if (!function_exists('mvx_process_order')) {
                 }
             }
         }
-        update_post_meta($order_id, '_mvx_order_processed', true);
+        $order->update_meta_data('_mvx_order_processed', true);
         do_action('mvx_order_processed', $order);
     }
 
@@ -8372,7 +8372,6 @@ if(!function_exists('insert_mvx_vendor_order_data')){
             'ID' => $order->get_id(),
             'post_author' => $vendor_id,
         ));
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":order_id:  : " . var_export($order->get_id(), true) . "\n", FILE_APPEND);
 
         return $order->get_id();
     }

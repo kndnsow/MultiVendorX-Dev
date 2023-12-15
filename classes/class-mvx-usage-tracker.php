@@ -509,7 +509,6 @@ class MVX_Plugin_Usage_Tracker {
     }
 
     public function plugin_data() {
-        //print_r($this->plugin_file . 'dc_product_vendor.php');die;
         if ( ! function_exists( 'get_plugin_data' ) ) {
             include ABSPATH . '/wp-admin/includes/plugin.php';
         }

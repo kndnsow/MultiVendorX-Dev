@@ -854,11 +854,11 @@ class MVX_REST_API {
         $sale_price = $request->get_param('sale_price') ? $request->get_param('sale_price') : '';
         $sku = $request->get_param('sku') ? $request->get_param('sku') : '';
         $manage_stock = $request->get_param('manage_stock') ? $request->get_param('manage_stock') : '';
-        $post_id = wp_insert_post( array( 'post_title' => $name, 'post_type' => 'product', 'post_status' => 'publish' ) );
+        $product_id = wp_insert_post( array( 'post_title' => $name, 'post_type' => 'product', 'post_status' => 'publish' ) );
 
-        update_post_meta($post_id, '_regular_price', $regular_price);
-        update_post_meta($post_id, '_sale_price', $sale_price);
-        update_post_meta($post_id, '_sku', $sku);
+        update_post_meta($product_id, '_regular_price', $regular_price);
+        update_post_meta($product_id, '_sale_price', $sale_price);
+        update_post_meta($product_id, '_sku', $sku);
     }
 
     public function mvx_list_of_vendor_order($request) {
@@ -4232,20 +4232,20 @@ class MVX_REST_API {
         $announcement_url = $fetch_data && isset($fetch_data['announcement_url']) ? $fetch_data['announcement_url'] : '';
         $announcement_content = $fetch_data && isset($fetch_data['announcement_content']) ? $fetch_data['announcement_content'] : '';
         $announcement_vendors = $fetch_data && isset($fetch_data['announcement_vendors']) ? $fetch_data['announcement_vendors'] : '';
-        $post_id = wp_insert_post( array( 'post_title' => $announcement_title, 'post_type' => 'mvx_vendor_notice', 'post_status' => 'publish', 'post_content' => $announcement_content ) );
-        $post = get_post($post_id);
-        update_post_meta( $post_id, '_mvx_vendor_notices_url', wc_clean($announcement_url) );
+        $notice_id = wp_insert_post( array( 'post_title' => $announcement_title, 'post_type' => 'mvx_vendor_notice', 'post_status' => 'publish', 'post_content' => $announcement_content ) );
+        $post = get_post($notice_id);
+        update_post_meta( $notice_id, '_mvx_vendor_notices_url', wc_clean($announcement_url) );
         $email_vendor = WC()->mailer()->emails['WC_Email_Vendor_New_Announcement'];
         $notify_vendors = isset($fetch_data['announcement_vendors']) && !empty($fetch_data['announcement_vendors']) ? wp_list_pluck(array_filter($fetch_data['announcement_vendors']), 'value')  : get_mvx_vendors( array(), 'ids' );
         if (isset($fetch_data['announcement_vendors']) && !empty($fetch_data['announcement_vendors'])) {
-            update_post_meta($post_id, '_mvx_vendor_notices_vendors', $notify_vendors);
+            update_post_meta($notice_id, '_mvx_vendor_notices_vendors', $notify_vendors);
             // send mail
             $single = ( count($notify_vendors) == 1 ) ? __( 'Your', 'multivendorx' ) : __( 'All vendors and their', 'multivendorx' );
             foreach ($notify_vendors as $vendor_id) {
                 $email_vendor->trigger( $post, $vendor_id, $single );
             }
         } else {
-            update_post_meta($post_id, '_mvx_vendor_notices_vendors', get_mvx_vendors( array(), 'ids' ));
+            update_post_meta($notice_id, '_mvx_vendor_notices_vendors', get_mvx_vendors( array(), 'ids' ));
             // send mail
             $single = ( count(get_mvx_vendors( array(), 'ids' )) == 1 ) ? __( 'Your', 'multivendorx' ) : __( 'All vendors and their', 'multivendorx' );
             foreach (get_mvx_vendors( array(), 'ids' ) as $vendor_id) {
@@ -4253,7 +4253,7 @@ class MVX_REST_API {
             }
         }
 
-        $all_details['redirect_link'] = admin_url('admin.php?page=mvx#&submenu=work-board&name=announcement&AnnouncementID='. $post_id .'');
+        $all_details['redirect_link'] = admin_url('admin.php?page=mvx#&submenu=work-board&name=announcement&AnnouncementID='. $notice_id .'');
         return $all_details;
     }
 

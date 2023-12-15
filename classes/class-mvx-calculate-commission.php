@@ -56,10 +56,8 @@ class MVX_Calculate_Commission {
                 MVX_Commission::calculate_commission($commission_id, $vendor_order);
                 //update_post_meta($commission_id, '_paid_status', 'unpaid'); // moved to create_commission() for proper ledger update
                 // add commission id with associated vendor order
-                // $update_meta = update_post_meta($vendor_order_id, '_commission_id', $commission_id);
-                // Mark commissions as processed
-                // update_post_meta($vendor_order_id, '_commissions_processed', 'yes');
                 $vendor_order->update_meta_data('_commission_id', $commission_id );
+                // Mark commissions as processed
                 $vendor_order->update_meta_data('_commissions_processed', 'yes' );
                 $vendor_order->save();
                 do_action( 'mvx_after_calculate_commission', $commission_id, $vendor_order_id );
@@ -394,7 +392,7 @@ class MVX_Calculate_Commission {
                         $commission_id = $this->record_commission($product_id, $order_id, $variation_id, $order, $vendor_obj, $item_id, $item);
                         if ($commission_id) {
                             $commission_ids[] = $commission_id;
-                            update_post_meta($order_id, '_commission_ids', $commission_ids);
+                            $order->update_meta_data('_commission_ids', $commission_ids);
                         }
                         $vendor_array[] = $vendor_obj->term_id;
                     }
@@ -404,7 +402,7 @@ class MVX_Calculate_Commission {
             $email_admin->trigger($order_id);
         }
         // Mark commissions as processed
-        update_post_meta($order_id, '_commissions_processed', 'yes');
+        $order->update_meta_data('_commissions_processed', 'yes');
         if (!empty($commission_ids) && is_array($commission_ids)) {
             foreach ($commission_ids as $commission_id) {
                 $commission_amount = get_mvx_vendor_order_amount(array('commission_id' => $commission_id, 'order_id' => $order_id));
