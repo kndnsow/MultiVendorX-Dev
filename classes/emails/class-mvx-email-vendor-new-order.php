@@ -67,8 +67,9 @@ if (!class_exists('WC_Email_Vendor_New_Order')) :
          * @return void
          */
         function trigger($order_id) {
+            $order = wc_get_order($order_id);
             if( $order_id ) {
-                $vendor_id = get_post_meta($order_id, '_vendor_id', true);
+                $vendor_id = $order->get_meta( '_vendor_id', true);
                 $vendor = get_mvx_vendor($vendor_id);
                 if ($vendor) {
                     $this->object = $this->order = wc_get_order($order_id);

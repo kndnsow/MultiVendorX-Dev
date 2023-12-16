@@ -83,7 +83,7 @@
  function order_details_vendor_table($suborder, $order, $order_items, $show_purchase_note, $show_customer_details, $downloads, $show_downloads){
      // get vendor id
      $suborder_id = $suborder->get_id();
-     $vendor_id = get_post_meta( $suborder_id, '_vendor_id', true );
+     $vendor_id = $suborder->get_meta( '_vendor_id', true );
      $vendor = get_mvx_vendor($vendor_id);
      $store_name =$vendor->page_title;
      ?>

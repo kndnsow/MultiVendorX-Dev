@@ -1447,7 +1447,7 @@ class MVX_Admin {
      * @since 3.0.2
      */
     public function regenerate_order_commissions($order) {
-        if ( !wp_get_post_parent_id( $order->get_id() ) ) {
+        if ( ! $order->get_parent_id() ) {
             return;
         }
         if (!in_array($order->get_status(), apply_filters( 'mvx_regenerate_order_commissions_statuses', array( 'on-hold', 'processing', 'completed' ), $order ))) {
@@ -1455,13 +1455,13 @@ class MVX_Admin {
         }
         
         delete_post_meta($order->get_id(), '_commissions_processed');
-        $commission_id = get_post_meta($order->get_id(), '_commission_id', true) ? get_post_meta($order->get_id(), '_commission_id', true) : '';
+        $commission_id = $order->get_meta( '_commission_id', true) ? $order->get_meta( '_commission_id', true) : '';
         if ($commission_id) {
             wp_delete_post($commission_id, true);
         }
         delete_post_meta($order->get_id(), '_commission_id');
         // create vendor commission
-        $commission_id = MVX_Commission::create_commission($order->get_id());
+        $commission_id = MVX_Commission::create_commission($order);
         if ($commission_id) {
             // Add order note
             $order->add_order_note( __( 'Regenerated order commission.', 'multivendorx') );

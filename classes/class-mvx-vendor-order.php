@@ -30,13 +30,13 @@ class mvx_vendor_order {
         }else{
             $this->id = 0;
         }
-        $this->vendor_id = absint( get_post_meta($this->id, '_vendor_id', true) );
-        
         $this->order = wc_get_order( $this->id );
+        $this->vendor_id = absint( $this->order->get_meta( '_vendor_id', true) );
+        
     }
     
     public function get_prop( $prop ) {
-        return get_post_meta($this->id, $prop, true);
+        return  $this->order->get_meta( $prop, true);
     }
     
     /**
@@ -160,5 +160,3 @@ class mvx_vendor_order {
     }
     
 }
-
-

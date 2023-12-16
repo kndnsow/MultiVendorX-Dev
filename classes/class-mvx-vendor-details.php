@@ -457,8 +457,9 @@ class MVX_Vendor {
 
         if ( $vendor_orders ) {
             foreach ( $vendor_orders as $order_id ) {
+                $vendor_order = wc_get_order($order_id);
                 if(get_post_status( $order_id ) === 'wc-cancelled') continue;
-                $commission_id = get_post_meta( $order_id, '_commission_id', true );
+                $commission_id = $vendor_order->get_meta( '_commission_id', true );
                 $order_ids[$commission_id] = $order_id;
             }
         }
@@ -1065,12 +1066,12 @@ public function get_vendor_orders_by_product($vendor_term_id, $product_id, $star
     public function set_order_shipped($order_id, $tracking_id = '', $tracking_url = '') {
         global $wpdb;
         $order = wc_get_order($order_id);
-        $shippers = get_post_meta($order_id, 'dc_pv_shipped', true) ? get_post_meta($order_id, 'dc_pv_shipped', true) : array();
+        $shippers = $order->get_meta( 'dc_pv_shipped', true) ? $order->get_meta( 'dc_pv_shipped', true) : array();
         if (!in_array($this->id, $shippers)) {
             $shippers[] = $this->id;
             $mails = WC()->mailer()->emails['WC_Email_Notify_Shipped'];
             if (!empty($mails)) {
-                $customer_email = get_post_meta($order_id, '_billing_email', true);
+                $customer_email = $order->get_meta( '_billing_email', true);
                 $mails->trigger($order_id, $customer_email, $this->term_id, array('tracking_id' => $tracking_id, 'tracking_url' => $tracking_url));
             }
             $order->update_meta_data('dc_pv_shipped', $shippers);

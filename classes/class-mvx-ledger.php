@@ -25,7 +25,7 @@ class MVX_Ledger {
     
     public function mvx_commission_after_save_commission_total( $commission_id, $order ){
         if( $order ){
-            $vendor_id = get_post_meta( $order->get_id(), '_vendor_id', true);
+            $vendor_id = $order->get_meta('_vendor_id', true);
             $vendor = get_mvx_vendor( $vendor_id );
             $args = array(
                 'meta_query' => array(
@@ -57,7 +57,7 @@ class MVX_Ledger {
     public function mvx_orders_migration_order_created( $order_id, $tbl_vorder_data ){
         $order = wc_get_order( $order_id );
         if( $order ) :
-            $commission_id = get_post_meta( $order->get_id(), '_commission_id', true );
+            $commission_id = $order->get_meta('_commission_id', true );
             $commission = get_post( $commission_id );
             $commission_specific_orders = get_mvx_vendor_orders(array('vendor_id' => $tbl_vorder_data->vendor_id, 'commission_id' => $commission_id, 'order_id' => $tbl_vorder_data->order_id ));
             $commission_total = 0;

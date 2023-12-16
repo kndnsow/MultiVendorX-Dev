@@ -1686,12 +1686,13 @@ if (!function_exists('do_mvx_commission_data_migrate')) {
                 $product_count = count($data['products']);
                 foreach ($data['products'] as $product_id) {
                     if ($data['vendor_id']) {
+                        $order = wc_get_order($data['order_id']);
                         $vendor = get_mvx_vendor_by_term($data['vendor_id']);
                         $update_data[] = array(
                             'order_id' => $data['order_id'],
                             'commission_id' => $commission_id,
                             'vendor_id' => $vendor->id,
-                            'shipping_status' => in_array($vendor->id, (array) get_post_meta($data['order_id'], 'dc_pv_shipped', true)) ? 1 : 0,
+                            'shipping_status' => in_array($vendor->id, (array) $order->get_meta( 'dc_pv_shipped', true)) ? 1 : 0,
                             'product_id' => $product_id,
                             'commission_amount' => round(($data['commission_amount'] / $product_count), 2),
                             'shipping' => round(($data['shipping_amount'] / $product_count), 2),
@@ -1782,10 +1783,10 @@ if (!function_exists('mvx_process_order')) {
         global $wpdb;
         if (!$order)
             $order = wc_get_order($order_id);
-        if (get_post_meta($order_id, '_mvx_order_processed', true) && !$order) {
+        if ($order->get_meta( '_mvx_order_processed', true) && !$order) {
             return;
         }
-        $vendor_shipping_array = get_post_meta($order_id, 'dc_pv_shipped', true);
+        $vendor_shipping_array = $order->get_meta( 'dc_pv_shipped', true);
         $mark_ship = 0;
         $items = $order->get_items('line_item');
         $shipping_items = $order->get_items('shipping');

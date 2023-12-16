@@ -456,7 +456,7 @@ class MVX_Cron_Job {
                                 if (!$order){
                                     continue;
                                 }
-                                $vendor_specific_order_migrated = (get_post_meta($corder->order_id, '_mvx_vendor_specific_order_migrated', true)) ? get_post_meta($corder->order_id, '_mvx_vendor_specific_order_migrated', true) : array();
+                                $vendor_specific_order_migrated = ($order->get_meta('_mvx_vendor_specific_order_migrated', true)) ? $order->get_meta('_mvx_vendor_specific_order_migrated', true) : array();
                                 if (in_array($vendor->id, $vendor_specific_order_migrated) || in_array($corder->order_id, $commission_specific_orders_ids_done)){
                                     continue;
                                 }
@@ -487,7 +487,7 @@ class MVX_Cron_Job {
                                     ), true);
                                     $vendor_order = wc_get_order($vendor_order_id);
                                     // mark as shipped
-                                    $shippers = get_post_meta($vorder->order_id, 'dc_pv_shipped', true) ? get_post_meta($vorder->order_id, 'dc_pv_shipped', true) : array();
+                                    $shippers = $vendor_order->get_meta('dc_pv_shipped', true) ? $vendor_order->get_meta('dc_pv_shipped', true) : array();
                                     if (in_array($vendor->id, $shippers)) {
                                         update_post_meta($vendor_order_id, 'dc_pv_shipped', $shippers);
                                         // set new meta shipped

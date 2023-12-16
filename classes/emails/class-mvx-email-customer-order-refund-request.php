@@ -63,7 +63,7 @@ if (!class_exists('WC_Email_Customer_Refund_Request')) :
                     $this->recipient = $recepient;
                 }
                 // refund info
-                $refund_status = get_post_meta( $order_id, '_customer_refund_order', true );
+                $refund_status = $this->object->get_meta( '_customer_refund_order', true );
                 if( $refund_status == 'refund_accept' ) {
                     $this->status = __( 'Accepted', 'multivendorx' );
                 }elseif( $refund_status == 'refund_reject') {

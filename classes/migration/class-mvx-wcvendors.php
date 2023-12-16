@@ -145,7 +145,7 @@ class MVX_WCVendors {
 					$order_id = $woocommerce_order->ID;
 					$order = wc_get_order($order_id);
 					if(!$order) continue;
-					$_mvx_vendor_specific_order_migrated = get_post_meta($order_id, '_mvx_vendor_specific_order_migrated', true) ? get_post_meta($order_id, '_mvx_vendor_specific_order_migrated', true) : array();
+					$_mvx_vendor_specific_order_migrated = $order->get_meta( '_mvx_vendor_specific_order_migrated', true) ? $order->get_meta( '_mvx_vendor_specific_order_migrated', true) : array();
 					$set_order_id_migration = array();
 					if ( !in_array($order_id, $_mvx_vendor_specific_order_migrated) ) {
 

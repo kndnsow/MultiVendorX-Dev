@@ -5133,7 +5133,7 @@ class MVX_REST_API {
 
         $commission_total = get_post_meta( $commission_id, '_commission_total', true );
         $order_id = get_post_meta( $commission_id, '_commission_order_id', true );
-        $is_migration_order = get_post_meta($order_id, '_order_migration', true); // backward compatibility
+        $is_migration_order = $order->get_meta('_order_migration', true); // backward compatibility
         $notes = $MVX->postcommission->get_commission_notes($commission_id);
         $notes_data = [];
         if ($notes) {

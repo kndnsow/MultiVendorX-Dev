@@ -20,9 +20,10 @@ if ( WC()->payment_gateways() ) {
 } else {
     $payment_gateways = array();
 }
-$address = get_post_meta(wp_get_post_parent_id($order->get_id()), '_mvx_user_location', true) ? get_post_meta(wp_get_post_parent_id($order->get_id()), '_mvx_user_location', true) : '';
-$lat = get_post_meta(wp_get_post_parent_id($order->get_id()), '_mvx_user_location_lat', true) ? get_post_meta(wp_get_post_parent_id($order->get_id()), '_mvx_user_location_lat', true) : '';
-$lng = get_post_meta(wp_get_post_parent_id($order->get_id()), '_mvx_user_location_lng', true) ? get_post_meta(wp_get_post_parent_id($order->get_id()), '_mvx_user_location_lng', true) : '';
+$parent_order = wc_get_order($order->get_parent_id());
+$address = $parent_order->get_meta( '_mvx_user_location', true) ? $parent_order->get_meta( '_mvx_user_location', true) : '';
+$lat = $parent_order->get_meta( '_mvx_user_location_lat', true) ? $parent_order->get_meta( '_mvx_user_location_lat', true) : '';
+$lng = $parent_order->get_meta( '_mvx_user_location_lng', true) ? $parent_order->get_meta( '_mvx_user_location_lng', true) : '';
 ?>
 <div class="panel-body panel-content-padding top-order-note">
     <div class="vorder-info-top-left pull-left">

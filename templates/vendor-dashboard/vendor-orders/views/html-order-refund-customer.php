@@ -23,7 +23,7 @@ global $MVX;
         <form method="post">
         <div class="form-group mb-0">
             <?php 
-            $refund_status = get_post_meta( $order->get_id(), '_customer_refund_order', true ) ? get_post_meta( $order->get_id(), '_customer_refund_order', true ) : '';
+            $refund_status = $order->get_meta('_customer_refund_order', true ) ? $order->get_meta( '_customer_refund_order', true ) : '';
             $refund_statuses = array( 
                 '' => __( 'Refund Status','multivendorx' ),
                 'refund_request' => __( 'Refund Requested', 'multivendorx' ), 

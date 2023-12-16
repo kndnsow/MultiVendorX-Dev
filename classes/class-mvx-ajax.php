@@ -266,7 +266,8 @@ class MVX_Ajax {
                 if( $filterActionData['order_status'] == 'request_refund') {
                     $vendor_all_orders = mvx_get_orders($args);
                     foreach ($vendor_all_orders as $key_refund => $value_refund) {
-                        $cust_refund_status = get_post_meta( $value_refund, '_customer_refund_order', true ) ? get_post_meta( $value_refund, '_customer_refund_order', true ) : '';
+                        $refund_order = wc_get_order($value_refund);
+                        $cust_refund_status = $refund_order->get_meta('_customer_refund_order', true ) ? $refund_order->get_meta('_customer_refund_order', true ) : '';
                         if ($cust_refund_status != 'refund_request') {
                             unset($vendor_all_orders[$key_refund]);
                         }
@@ -292,7 +293,7 @@ class MVX_Ajax {
             if ($order) {
                 if(in_array($order->get_status(), array('draft', 'trash'))) continue;
                 $actions = array();
-                $is_shipped = (array) get_post_meta($order->get_id(), 'dc_pv_shipped', true);
+                $is_shipped = (array) $order->get_meta('dc_pv_shipped', true);
                 if (!in_array($vendor->id, $is_shipped)) {
                     $mark_ship_title = __('Mark as shipped', 'multivendorx');
                 } else {
@@ -782,7 +783,7 @@ class MVX_Ajax {
             if (!$vendor)
                 die('Invalid request');
             $order_data = array();
-            $commission_id = get_post_meta( $order_id, '_commission_id', true );
+            $commission_id = $order->get_meta( '_commission_id', true );
             if (!empty($commission_id)) {
                 //$commission_id = $customer_orders[0]['commission_id'];
                 $order_data[$commission_id] = $order_id;
@@ -2101,8 +2102,8 @@ class MVX_Ajax {
 
                         $action_html = '';
                         if ($vendor->is_shipping_enable()) {
-                            $is_shipped = (array) get_post_meta($pending_order->get_id(), 'dc_pv_shipped', true);
-                            $vendor_order_shipped = get_post_meta($pending_order->get_id(), 'mvx_vendor_order_shipped');
+                            $is_shipped = (array) $pending_order->get_meta('dc_pv_shipped', true);
+                            $vendor_order_shipped = $pending_order->get_meta('mvx_vendor_order_shipped');
                             if (!in_array($vendor->id, $is_shipped) && !$vendor_order_shipped ) {
                                 $action_html .= '<a href="javascript:void(0)" title="' . __('Mark as shipped', 'multivendorx') . '" onclick="mvxMarkeAsShip(this,' . $pending_order->get_id() . ')"><i class="mvx-font ico-shippingnew-icon action-icon"></i></a> ';
                             } else {
@@ -3169,7 +3170,7 @@ class MVX_Ajax {
         try {
             $order = wc_get_order($order_id);
 
-            $parent_order_id = wp_get_post_parent_id($order_id);
+            $parent_order_id = $order->get_parent_id();
             $parent_order = wc_get_order( $parent_order_id );
             $parent_items_ids = array_keys($parent_order->get_items( array( 'line_item', 'fee', 'shipping' ) ));
 

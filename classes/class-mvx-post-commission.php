@@ -74,9 +74,10 @@ class MVX_Commission {
      * @param array $args
      * @return int $commission_id
      */
-    public static function create_commission($order_id, $args = array()) {
+    public static function create_commission($order, $args = array()) {
+        $order_id = $order->get_id();
         if ($order_id) {
-            $vendor_id = get_post_meta($order_id, '_vendor_id', true);
+            $vendor_id = $order->get_meta( '_vendor_id', true);
             // create vendor commission
             $default = array(
                 'post_type' => 'dc_commission',
@@ -123,7 +124,7 @@ class MVX_Commission {
         global $MVX;
         if ($commission_id && $order) {
             $commission_type = mvx_get_settings_value($MVX->vendor_caps->payment_cap['commission_type']);
-            $vendor_id = get_post_meta($order->get_id(), '_vendor_id', true);
+            $vendor_id = $order->get_meta( '_vendor_id', true);
              // line item commission
              $commission_amount = $shipping_amount = $tax_amount = $shipping_tax_amount = 0;
              $commission_rates = array();
@@ -144,7 +145,7 @@ class MVX_Commission {
                     $commission_rates[$item_id] = $commission_rate;
                 }
             } else {
-                $commission_rates = get_post_meta($order->get_id(), 'order_items_commission_rates', true);
+                $commission_rates = $order->get_meta( 'order_items_commission_rates', true);
                 foreach ($order->get_items() as $item_id => $item) {
                     $product = $item->get_product();
                     $meta_data = $item->get_meta_data();

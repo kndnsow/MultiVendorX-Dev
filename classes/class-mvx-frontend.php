@@ -382,7 +382,7 @@ class MVX_Frontend {
      * @return void
      */
     public function mvx_checkout_order_processed($order_id, $order_posted, $order) {
-        if (!get_post_meta($order_id, '_mvx_order_processed', true)) {
+        if (!$order->get_meta(  '_mvx_order_processed', true)) {
             mvx_process_order($order_id, $order);
         }
     }
