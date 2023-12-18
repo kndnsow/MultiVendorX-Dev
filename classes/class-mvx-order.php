@@ -27,7 +27,7 @@ class MVX_Order {
         } else {
             // filters order list table
             if($MVX->hpos_is_enabled){
-                // add_filter( 'woocommerce_hpos_pre_query', array($this, 'wc_order_list_filter'), 10, 3 );
+                add_filter( 'woocommerce_orders_table_query_clauses', array($this, 'wc_order_list_filter') );
             } else { // before wc version 8.3.0
                 add_filter('request', array($this, 'wc_order_list_filter_old'), 10, 1);
             }
@@ -165,27 +165,10 @@ class MVX_Order {
         return $query;
     }
 
-    public function wc_order_list_filter($orders, $query, $sql) {
+    public function wc_order_list_filter($where_cloas) {
         global $wpdb;
-        $sql = substr_replace($sql, $wpdb->prefix . 'wc_orders.parent_order_id = 0 AND ', strpos($sql, '1=1' ), 0);
-        // $where_cloas['where'] .= ' AND ' . $wpdb->prefix . 'wc_orders.parent_order_id = 0';
-        echo '<pre>';
-        print_r($wpdb->get_results($sql));
-        // file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":orders:  : " . var_export($where_cloas, true) . "\n", FILE_APPEND);
-        die;
-        // $user = wp_get_current_user();
-        // if ('shop_order' == $typenow) {
-        //     if (current_user_can('administrator') && empty($_REQUEST['s'])) {
-        //         $query['post_parent'] = 0;
-        //     } elseif (current_user_can('shop_manager') && empty($_REQUEST['s'])) {
-        //         $query['post_parent'] = 0;
-        //     } elseif(in_array('dc_vendor', $user->roles)) {
-        //         $query['author'] = $user->ID;
-        //     }
-        //     return apply_filters("mvx_shop_order_query_request", $query);
-        // }
-
-        return $orders;
+        $where_cloas['where'] .= ' AND ' . $wpdb->prefix . 'wc_orders.parent_order_id = 0';
+        return $where_cloas;
     }
     
     public function init_prevent_trigger_vendor_order_emails(){
@@ -281,11 +264,10 @@ class MVX_Order {
      * @param  string $column
      */
     public function mvx_show_shop_order_columns($column, $post_id) {
+        remove_filter( 'woocommerce_orders_table_query_clauses', array($this, 'wc_order_list_filter') );
         switch ($column) {
                 case 'mvx_suborder' :
                 $mvx_suborders = get_mvx_suborders($post_id);
-                    // print_r(var_export($mvx_suborders,true));
-                    // die;
                 if ($mvx_suborders) {
                     echo '<ul class="mvx-order-vendor" style="margin:0px;">';
                     foreach ($mvx_suborders as $suborder) {
@@ -867,7 +849,6 @@ class MVX_Order {
         if(!$order_id) return;
         // Check order have status
         if (empty($new_status)) {
-            // $order = wc_get_order($order_id);
             $new_status = $order->get_status('edit');
         }    
         $status_to_sync = apply_filters('mvx_parent_order_to_vendor_order_statuses_to_sync',array('on-hold', 'pending', 'processing', 'cancelled', 'failed'));
@@ -878,7 +859,6 @@ class MVX_Order {
             remove_action( 'woocommerce_order_status_completed', 'wc_paying_customer' );
             // Check if order have sub-order
             $mvx_suborders = get_mvx_suborders($order_id);
-                    
             if ($mvx_suborders) {
                 foreach ($mvx_suborders as $suborder) {
                     $suborder->update_status($new_status, _x('Update via parent order: ', 'Order note', 'multivendorx'));
@@ -932,6 +912,7 @@ class MVX_Order {
                      * Otherwise I set the parent order to processing
                      */
                     $status = array_unique(array_keys($suborder_statuses));
+
                     if ( $suborder_count == 1 ) {
                         $new_status = isset($status[0]) ? $status[0] : $new_status;
                         $parent_order->update_status( $new_status, _x( "Sync from vendor's suborders: ", 'Order note', 'multivendorx' ) );
@@ -1459,8 +1440,8 @@ class MVX_Order {
     }
     
     public function mvx_vendor_order_status_changed_actions( $order_id, $old_status, $new_status ){
-        if( !$order_id || !is_mvx_vendor_order( $order_id ) ) return;
         $order = wc_get_order( $order_id );
+        if( !$order_id || !is_mvx_vendor_order( $order ) ) return;
         if( $new_status == 'cancelled' ){
             $commission_id = $order->get_meta( '_commission_id', true );
             do_action( 'mvx_vendor_order_on_cancelled_commission', $commission_id, $order_id );
@@ -1468,6 +1449,7 @@ class MVX_Order {
         }
         // stock increase when suborder mark as completed
         if (wp_get_post_parent_id($order_id) && $new_status == 'completed') {
+            
             $items = $order->get_items();
             foreach ($items as $item_id => $item) {
                 if (isset($item['product_id']) && $item['product_id'] !== 0) {

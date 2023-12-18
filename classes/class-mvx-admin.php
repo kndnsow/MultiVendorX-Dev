@@ -1320,8 +1320,7 @@ class MVX_Admin {
             wp_add_inline_style( 'woocommerce_admin_styles', $custom_css );
         }
         
-
-        if ( in_array($screen->id, array('edit-shop_order'))) {
+        if ( in_array($screen->id, array('edit-shop_order')) || in_array($screen->id, array('woocommerce_page_wc-orders'))) {
             wp_enqueue_style('mvx_admin_order_css', $MVX->plugin_url . 'assets/admin/css/admin-order' . $suffix . '.css', array(), $MVX->version);
         }
         
