@@ -605,7 +605,7 @@ class MVX_Order {
     public static function create_mvx_order_line_items($order, $args) {
         $line_items = $args['line_items'];
         $commission_rate_items = array();
-        foreach ($line_items as $item_id => $order_item) {
+        foreach ($line_items as $order_item) {
             if (isset($order_item['product_id']) && $order_item['product_id'] !== 0) {
                 $item = new WC_Order_Item_Product();
                 $product = wc_get_product($order_item['product_id']);
@@ -634,7 +634,7 @@ class MVX_Order {
                 }
 
                 $item->set_backorder_meta();
-                $item->add_meta_data('_vendor_order_item_id', $item_id);
+                $item->add_meta_data('_vendor_order_item_id', $item->get_product_id());
                 // Add commission data
                 $item->add_meta_data('_vendor_item_commission', $order_item['commission']);
                 
@@ -652,12 +652,12 @@ class MVX_Order {
 //                $item->add_meta_data($general_cap, $vendor->page_title);
 
 
-                do_action('mvx_vendor_create_order_line_item', $item, $item_id, $order_item, $order);
+                do_action('mvx_vendor_create_order_line_item', $item, $item->get_product_id(), $order_item, $order);
                 // Add item to order and save.
                 $order->add_item($item);
                 // temporary commission rate save with order_item_id
                 if(isset($order_item['commission_rate']) && $order_item['commission_rate'])
-                    $commission_rate_items[$item_id] = $order_item['commission_rate'];
+                    $commission_rate_items[$item->get_product_id()] = $order_item['commission_rate'];
             }
         }
         /**
