@@ -1071,10 +1071,11 @@ public function get_vendor_orders_by_product($vendor_term_id, $product_id, $star
             $shippers[] = $this->id;
             $mails = WC()->mailer()->emails['WC_Email_Notify_Shipped'];
             if (!empty($mails)) {
-                $customer_email = $order->get_meta( '_billing_email', true);
+                $customer_email = $order->get_billing_email();
                 $mails->trigger($order_id, $customer_email, $this->term_id, array('tracking_id' => $tracking_id, 'tracking_url' => $tracking_url));
             }
-            $order->update_meta_data('dc_pv_shipped', $shippers);
+            $up_meta = $order->update_meta_data('dc_pv_shipped', $shippers);
+        file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":orders:  : " . var_export($up_meta, true) . "\n", FILE_APPEND);
             // set new meta shipped
             $order->update_meta_data('mvx_vendor_order_shipped', 1);
         }

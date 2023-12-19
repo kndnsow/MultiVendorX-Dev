@@ -2,6 +2,7 @@
 class MVX_Vendor_Shipping_Method extends WC_Shipping_Method {
     public $default_option;
     public $default;
+    public $fee_cost;
     
     public function __clone() {
         _doing_it_wrong( __FUNCTION__, __( 'Cloning this class could cause catastrophic disasters!', 'multivendorx' ), '3.0' );
