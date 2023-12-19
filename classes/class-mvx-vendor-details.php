@@ -1074,10 +1074,10 @@ public function get_vendor_orders_by_product($vendor_term_id, $product_id, $star
                 $customer_email = $order->get_billing_email();
                 $mails->trigger($order_id, $customer_email, $this->term_id, array('tracking_id' => $tracking_id, 'tracking_url' => $tracking_url));
             }
-            $up_meta = $order->update_meta_data('dc_pv_shipped', $shippers);
-        file_put_contents( plugin_dir_path(__FILE__) . "/error.log", date("d/m/Y H:i:s", time()) . ":orders:  : " . var_export($up_meta, true) . "\n", FILE_APPEND);
+            $order->update_meta_data('dc_pv_shipped', $shippers);
             // set new meta shipped
             $order->update_meta_data('mvx_vendor_order_shipped', 1);
+            $order->save();
         }
         do_action('mvx_vendors_vendor_ship', $order_id, $this->term_id);
         $comment_id = $order->add_order_note(__('Vendor ', 'multivendorx') . $this->page_title . __(' has shipped his part of order to customer.', 'multivendorx') . '<br><span>' . __('Tracking Url : ', 'multivendorx') . '</span> <a target="_blank" href="' . $tracking_url . '">' . $tracking_url . '</a><br><span>' . __('Tracking Id : ', 'multivendorx') . '</span>' . $tracking_id, 0, true);

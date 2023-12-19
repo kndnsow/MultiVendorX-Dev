@@ -1870,6 +1870,7 @@ if (!function_exists('mvx_process_order')) {
             }
         }
         $order->update_meta_data('_mvx_order_processed', true);
+        $order->save();
         do_action('mvx_order_processed', $order);
     }
 
@@ -8362,6 +8363,7 @@ if(!function_exists('insert_mvx_vendor_order_data')){
         $order->calculate_totals();
         $order->set_parent_id( $parent_order->get_id() );
         $order->update_meta_data( '_vendor_id', $vendor_id );
+        $order->save();
         foreach ( $meta as $key ) {
             if ( is_callable( [ $order, "set_{$key}" ] ) ) {
                 $order->{"set_{$key}"}( $parent_order->{"get_{$key}"}() );

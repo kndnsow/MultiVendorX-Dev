@@ -327,6 +327,7 @@ class MVX_Order {
             return false;
         // update parent order meta
         $order->update_meta_data('has_mvx_sub_order', true);
+        $order->save();
         $vendor_orders = array();
         foreach ($vendor_items as $vendor_id => $items) {
             if (!empty($items)) {
@@ -553,6 +554,7 @@ class MVX_Order {
                         $meta_key = 'shipping' == $section || 'billing' == $section ? '_' . $order_meta_key : $order_meta_key;
                         $meta_value_to_save = isset($args['posted_data'][$order_meta_key]) ? $args['posted_data'][$order_meta_key] : $order->get_meta(  $meta_key, true);
                         $vendor_order->update_meta_data($meta_key, $meta_value_to_save);
+                        $vendor_order->save();
                     }
                 }
             }
@@ -664,7 +666,7 @@ class MVX_Order {
          * @since 3.1.2.0
          */
         $order->update_meta_data('order_items_commission_rates', $commission_rate_items);
-        
+        $order->save();
     }
 
     /**
@@ -864,6 +866,7 @@ class MVX_Order {
                     $suborder->update_status($new_status, _x('Update via parent order: ', 'Order note', 'multivendorx'));
                 }
                 $order->update_meta_data('mvx_vendor_order_status_synchronized', true);
+                $order->save();
                 add_action( 'woocommerce_order_status_completed', 'wc_paying_customer' );
             }
         endif;
@@ -1595,6 +1598,7 @@ class MVX_Order {
         // update customer refunt request 
         $order->update_meta_data('_customer_refund_order', wc_clean( wp_unslash( 'refund_request' ) ));
         $order->update_meta_data('_customer_refund_reason', wc_clean( wp_unslash( $refund_reason ) ));
+        $order->save();
         $comment_id = $order->add_order_note( __('Customer requested a refund ', 'multivendorx') .$order_id.' .' );
         // user info
         $user_info = get_userdata(get_current_user_id());
@@ -1656,7 +1660,7 @@ class MVX_Order {
 
     public function mvx_refund_order_status_save( $post_id ){
         global $post;
-        if( $post && $post->post_type != 'shop_order' ) return;
+        if( empty($post) || ( $post && $post->post_type != 'shop_order' ) ) return;
         if( !mvx_get_order( $post_id ) ) return;
         if( !isset( $_POST['cust_refund_status'] ) ) $post_id;
         if( isset( $_POST['refund_order_customer'] ) && $_POST['refund_order_customer'] ) {
@@ -1734,12 +1738,14 @@ class MVX_Order {
 
         if ($wpnonce && wp_verify_nonce($wpnonce, 'mvx_accept_refund') && $order) {
             $order->update_meta_data('_customer_refund_order', wc_clean( wp_unslash( 'refund_accept' ) ));
+            $order->save();
             wc_add_notice(__('Changed status to Refund Accepted', 'multivendorx'), 'success');
             wp_redirect(esc_url(mvx_get_vendor_dashboard_endpoint_url(get_mvx_vendor_settings('mvx_vendor_orders_endpoint', 'seller_dashbaord', 'vendor-orders'), $order_id)));
             exit;
         }
         if ($wpnonce && wp_verify_nonce($wpnonce, 'mvx_reject_refund') && $order) {
             $order->update_meta_data('_customer_refund_order', wc_clean( wp_unslash( 'refund_reject' ) ));
+            $order->save();
             wc_add_notice(__('Changed status to Refund rejected', 'multivendorx'), 'error');
             wp_redirect( $refund_redirect_url );
             exit;
@@ -1747,6 +1753,7 @@ class MVX_Order {
         if ($wpnonce && wp_verify_nonce($wpnonce, 'mvx_pending_refund') && $order) {
             update_post_meta( $order_id, '_customer_refund_order', wc_clean( wp_unslash( 'refund_request' ) ) );
             $order->update_meta_data('_customer_refund_order', wc_clean( wp_unslash( 'refund_request' ) ));
+            $order->save();
             wc_add_notice(__('Changed status to Refund Pending', 'multivendorx'), 'error');
             wp_redirect( $refund_redirect_url );
             exit;

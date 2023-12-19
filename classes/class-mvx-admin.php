@@ -1479,6 +1479,7 @@ class MVX_Admin {
             $order->update_meta_data('_commission_id', absint($commission_id));
             // Mark commissions as processed
             $order->update_meta_data('_commissions_processed', 'yes');
+            $order->save();
         }
     }
 

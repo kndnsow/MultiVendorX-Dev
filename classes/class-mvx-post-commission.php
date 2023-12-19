@@ -177,6 +177,7 @@ class MVX_Commission {
              * @since 3.4.0
             */
             $order->update_meta_data('order_items_commission_rates', apply_filters('mvx_vendor_order_items_commission_rates', $commission_rates, $order));
+            $order->save();
             // transfer shipping charges
             if ($MVX->vendor_caps->vendor_payment_settings('give_shipping') && !get_user_meta($vendor_id, '_vendor_give_shipping', true)) {
                 $shipping_amount = $order->get_shipping_total();

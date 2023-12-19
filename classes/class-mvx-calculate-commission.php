@@ -394,6 +394,7 @@ class MVX_Calculate_Commission {
                         if ($commission_id) {
                             $commission_ids[] = $commission_id;
                             $order->update_meta_data('_commission_ids', $commission_ids);
+                            $order->save();
                         }
                         $vendor_array[] = $vendor_obj->term_id;
                     }
@@ -404,6 +405,7 @@ class MVX_Calculate_Commission {
         }
         // Mark commissions as processed
         $order->update_meta_data('_commissions_processed', 'yes');
+        $order->save();
         if (!empty($commission_ids) && is_array($commission_ids)) {
             foreach ($commission_ids as $commission_id) {
                 $commission_amount = get_mvx_vendor_order_amount(array('commission_id' => $commission_id, 'order_id' => $order_id));

@@ -156,6 +156,7 @@ class MVX_Dokan {
 						}
 						$suborder_create = $MVX->order->mvx_manually_create_order_item_and_suborder($order_id, '', true);
 						$order->update_meta_data('_mvx_vendor_specific_order_migrated', $set_order_id_migration);
+						$order->save();
 					}
 				}
 			}
