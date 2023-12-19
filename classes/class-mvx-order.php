@@ -5,11 +5,11 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * @class 		MVX Order Class
+ * @class       MVX Order Class
  *
- * @version		3.4.0
- * @package		MultivendorX
- * @author 		MultiVendorX
+ * @version     3.4.0
+ * @package     MultivendorX
+ * @author      MultiVendorX
  */
 class MVX_Order {
 
@@ -1564,18 +1564,18 @@ class MVX_Order {
                     $("#mvx-myac-order-refund-wrap .cust-rr-other").hide();
                 }
             });
-			$("#cust_request_refund_btn").click(function(){
-				$("#mvx-myac-order-refund-wrap").slideToggle();
-			});
-		} )( jQuery );' );
+            $("#cust_request_refund_btn").click(function(){
+                $("#mvx-myac-order-refund-wrap").slideToggle();
+            });
+        } )( jQuery );' );
     }
 
     public function mvx_handler_cust_requested_refund() {
         global $wp;
         $nonce_value = isset($_REQUEST['cust-request-refund-nonce']) ? wc_get_var( $_REQUEST['cust-request-refund-nonce'], wc_get_var( $_REQUEST['_wpnonce'], '' ) ) : ''; // @codingStandardsIgnoreLine.
 
-		if ( ! wp_verify_nonce( $nonce_value, 'customer_request_refund' ) ) {
-			return;
+        if ( ! wp_verify_nonce( $nonce_value, 'customer_request_refund' ) ) {
+            return;
         }
         // If no refund reason is selected
         if ( !isset( $_REQUEST['refund_reason_option'] ) ) {
@@ -1621,7 +1621,7 @@ class MVX_Order {
     public function mvx_refund_order_status_customer_meta(){
         global $post;
         if( $post && $post->post_type != 'shop_order' ) return;
-        if( !mvx_get_order( $_GET['id'] ) ) return;
+        if( isset($_GET['id']) && !mvx_get_order( $_GET['id'] ) ) return;
         add_meta_box( 'refund_status_customer', __('Customer refund status', 'multivendorx'),  array( $this, 'mvx_order_customer_refund_dd' ), 'shop_order', 'side', 'core' );
     }
 
