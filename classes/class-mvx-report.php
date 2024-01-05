@@ -55,7 +55,7 @@ class MVX_Report {
     	if (is_array($report_data->partial_refunds) && !empty($report_data->partial_refunds)) {
     		foreach ($report_data->partial_refunds as $refund_key => $refund_value) {
     			$refund = new WC_Order_Refund( $refund_value->refund_id );
-    			if ( is_object( $refund ) && !wp_get_post_parent_id($refund->get_parent_id())) {
+    			if ( is_object( $refund ) && !wc_get_order($refund->get_parent_id())->get_parent_id()) {
     				$child_orders_for_partial[] = $refund_value;
     			}
     		}
@@ -65,7 +65,7 @@ class MVX_Report {
     	if (is_array($report_data->refund_lines) && !empty($report_data->refund_lines)) {
     		foreach ($report_data->refund_lines as $refund_key => $refund_value) {
     			$refund = new WC_Order_Refund( $refund_value->refund_id );
-    			if ( is_object( $refund ) && !wp_get_post_parent_id($refund->get_parent_id())) {
+    			if ( is_object( $refund ) && !wc_get_order($refund->get_parent_id())->get_parent_id()) {
     				$child_orders_refund_lines[] = $refund_value;
     			}
     		}

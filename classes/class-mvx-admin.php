@@ -1427,10 +1427,10 @@ class MVX_Admin {
     }
 
     public function woocommerce_order_actions($actions) {
-        global $post;
-        if ( $post && wp_get_post_parent_id( $post->ID ) )
+        $order = wc_get_order($_GET['id']);
+        if ( $order && $order->get_parent_id() )
             $actions['regenerate_order_commissions'] = __('Regenerate order commissions', 'multivendorx');
-        if ( $post && !wp_get_post_parent_id( $post->ID ) )
+        if ( $order && !$order->get_parent_id() )
             $actions['regenerate_suborders'] = __('Regenerate suborders', 'multivendorx');
         if (is_user_mvx_vendor(get_current_user_id())) {
             if (isset($actions['regenerate_order_commissions'])) unset($actions['regenerate_order_commissions']);

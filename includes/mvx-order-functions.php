@@ -110,7 +110,8 @@ function is_mvx_vendor_order( $order, $current_vendor = false ) {
  */
 function get_refund_commission_amount($refund_id, $context = 'view') {
     if( $refund_id ){
-        $order_id = wp_get_post_parent_id( $refund_id );
+        $refund = wc_get_order($refund_id);
+        $order_id = $refund->get_parent_id();
         $order = wc_get_order($order_id);
         $commission_id = $order->get_meta( '_commission_id', true );
         $commission_refunded_data = get_post_meta( $commission_id, '_commission_refunded_data', true );
