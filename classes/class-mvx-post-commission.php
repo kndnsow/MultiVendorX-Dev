@@ -104,7 +104,7 @@ class MVX_Commission {
                  */
                 do_action('mvx_commission_update_commission_meta', $commission_id);
 
-                self::add_commission_note($commission_id, sprintf(__('Commission for order <a href="%s">(ID : %s)</a> is created.', 'multivendorx'), get_admin_url() . 'post.php?post=' . $order_id . '&action=edit', $order_id), $vendor_id);
+                self::add_commission_note($commission_id, sprintf(__('Commission for order <a href="%s">(ID : %s)</a> is created.', 'multivendorx'), get_admin_url() . 'post.php?post=' . $order->get_id() . '&action=edit', $order->get_id()), $vendor_id);
                 return $commission_id;
             }
         }
