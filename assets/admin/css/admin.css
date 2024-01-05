@@ -4300,4 +4300,78 @@ h2 .mvx-module-dialog-title i {
   display: block;
   width: fit-content;
   box-shadow: 0.25rem 0.25rem 1.5rem rgba(227, 80, 71, 0.5);
+}
+
+table.mvx-shipping-zone-methods {
+  position: relative;
+}
+table.mvx-shipping-zone-methods td {
+  display: table-cell;
+}
+table.mvx-shipping-zone-methods td:has(> button) {
+  position: absolute;
+  display: flex;
+  justify-content: end;
+  width: 100%;
+}
+
+.mvx-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.mvx-btn.btn-purple {
+  transition: all 0.3s ease;
+  border-radius: 0.25rem;
+  padding: 0.594rem 1rem;
+  cursor: pointer;
+  vertical-align: middle;
+  white-space: nowrap;
+  background-color: #65438f;
+  border: none;
+  color: #f9f8fb;
+}
+
+.mvx-page:has(.mvx-vendor-shipping) .MuiPaper-root {
+  max-height: fit-content !important;
+}
+.mvx-page:has(.mvx-vendor-shipping) .MuiPaper-root h2 {
+  position: absolute !important;
+  top: 0;
+  width: 100%;
+  background: #f9f8fb;
+  left: 0;
+  padding: 1rem 2rem 0 !important;
+}
+.mvx-page:has(.mvx-vendor-shipping) .MuiPaper-root .MuiDialogContent-root {
+  padding: 5rem 0 3rem !important;
+  min-height: 320px;
+}
+.mvx-page:has(.mvx-vendor-shipping) .MuiPaper-root .MuiDialogContent-root p {
+  margin-bottom: 10px;
+}
+.mvx-page:has(.mvx-vendor-shipping) .MuiPaper-root .MuiDialogContent-root .shipping_method.css-b62m3t-container {
+  width: 65%;
+  margin-bottom: 0.5rem;
+}
+.mvx-page:has(.mvx-vendor-shipping) .MuiPaper-root .MuiDialogActions-root.MuiDialogActions-spacing {
+  padding: 1rem 2rem;
+  position: absolute;
+  border-top: 0.06rem solid #ece8f1;
+  width: 100%;
+  left: 0;
+  bottom: 0;
+  background: #f9f8fb;
+}
+.mvx-page:has(.mvx-vendor-shipping) .MuiPaper-root .MuiDialogActions-root.MuiDialogActions-spacing button.mvx-btn.btn-purple {
+  -webkit-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+  border-radius: 0.25rem;
+  padding: 0.594rem 1rem;
+  cursor: pointer;
+  vertical-align: middle;
+  white-space: nowrap;
+  background-color: #65438f;
+  border: none;
+  color: #f9f8fb;
 }/*# sourceMappingURL=admin.css.map */

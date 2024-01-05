@@ -1,6 +1,5 @@
 <?php
 
-use Automattic\WooCommerce\Utilities\OrderUtil;
 
 /**
  * MVX Order Functions
@@ -33,19 +32,29 @@ function mvx_get_orders($args = array(), $return_type = 'ids', $subonly = false)
 	'fields'           => 'ids',
     );
     if( $subonly ) {
-        $default['meta_key'] = '_created_via';
-        $default['meta_value'] = 'mvx_vendor_order';
+        $default['meta_query'] = array(
+            array(
+                'key' => '_created_via',
+                'value' => 'mvx_vendor_order',
+            ),
+        );
     }
     $args = wp_parse_args($args, $default);
-    $query = new WP_Query( apply_filters( 'mvx_get_orders_query_args', $args ) );
+    $query = new WC_Order_Query( apply_filters( 'mvx_get_orders_query_args', $args ) );
     if(strtolower($return_type) == 'object'){
         $orders = array();
-        foreach ($query->get_posts() as $post_id) {
-            $orders[$post_id] = wc_get_order($post_id);
+        foreach ($query->get_orders() as $order) {
+            if(!is_object($order)){
+                $orders[$order] = wc_get_order($order);
+            }
+            else{
+               $orders [$order->get_id()] = $order;
+            }
+                
         }
         return $orders;
     }
-    return $query->get_posts();
+    return $query->get_orders();
 }
 
 /**
@@ -78,7 +87,9 @@ function mvx_get_order($id){
  * @return boolean
  */
 function is_mvx_vendor_order( $order, $current_vendor = false ) {
+    global $MVX;
     $order_id = 0;
+    // remove_filter('woocommerce_orders_table_query_clauses', array($MVX->order, 'wc_order_list_filter'));
     if( is_object( $order ) ){
         $order_id = $order->get_id();
     }else{
@@ -156,16 +167,16 @@ function mvx_get_total_refunded_for_item( $item_id, $order_id ) {
 function get_mvx_suborders( $order_id, $args = array(), $object = true ) {
     global $MVX;
     $orders = array();
-    remove_filter('woocommerce_orders_table_query_clauses', array($MVX->order, 'wc_order_list_filter'));
+    // remove_filter('woocommerce_orders_table_query_clauses', array($MVX->order, 'wc_order_list_filter'));
     if($MVX->hpos_is_enabled){
-        if(is_int($order_id)){
+        if(is_object($order_id)){
+            $orders = wc_get_orders(array('parent' => $order_id->get_id()));
+        } else {
             $default = array(
                 'parent' => $order_id,
             );
             $args = ( $args ) ? wp_parse_args( $args, $default ) : $default;
             $orders = wc_get_orders($args);
-        } else {
-            $orders = wc_get_orders(array('parent' => $order_id->get_id()));
         }
     } else {
         $default = array(

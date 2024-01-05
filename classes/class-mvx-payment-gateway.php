@@ -38,7 +38,7 @@ abstract class MVX_Payment_Gateway {
         }
         $transaction_args = array(
             'post_type' => 'mvx_transaction',
-            'post_title' => sprintf(__('Transaction - %s', 'multivendorx'), date(_x('%B %e, %Y @ %I:%M %p', 'Transaction date parsed by strftime', 'multivendorx'), current_time( 'timestamp' ))),
+            'post_title' => sprintf(__('Transaction - %s', 'multivendorx'), date(_x('F j, Y @ h:i a', 'Transaction date parsed by strftime', 'multivendorx'), current_time( 'timestamp' ))),
             'post_status' => $commission_status,
             'ping_status' => 'closed',
             'post_author' => $this->vendor->term_id

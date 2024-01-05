@@ -75,8 +75,7 @@ class MVX_Commission {
      * @return int $commission_id
      */
     public static function create_commission($order, $args = array()) {
-        $order_id = $order->get_id();
-        if ($order_id) {
+        if (($order)) {
             $vendor_id = $order->get_meta( '_vendor_id', true);
             // create vendor commission
             $default = array(
@@ -93,12 +92,11 @@ class MVX_Commission {
             $commission_id = wp_insert_post($commission_data);
             if ($commission_id) {
                 // add order id with commission meta
-                update_post_meta($commission_id, '_commission_order_id', $order_id);
+                update_post_meta($commission_id, '_commission_order_id', $order->get_id());
                 update_post_meta($commission_id, '_paid_status', 'unpaid');
                 // for BW supports
                 $vendor = get_mvx_vendor( $vendor_id );
                 update_post_meta($commission_id, '_commission_vendor', $vendor->term_id);
-                // add commission id with associated vendor order
                 /**
                  * Action hook to update commission meta data.
                  *
@@ -331,7 +329,7 @@ class MVX_Commission {
             $shipping_amount = get_post_meta( $commission_id, '_shipping', true );
             $commission_refunded_shipping = get_post_meta( $commission_id, '_commission_refunded_shipping', true );
             $total = floatval($shipping_amount) + floatval($commission_refunded_shipping);
-            return $context == 'view' ? wc_price($total, array('currency' => $order->get_currency())) : $total;
+            return $context == 'view' ? ( $order ? (wc_price($total, array('currency' => $order->get_currency()))) : 0 ) : $total;
         }
     }
     

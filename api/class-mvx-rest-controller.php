@@ -2209,7 +2209,6 @@ class MVX_REST_API {
         foreach ($add_modules_details as $key_parent => $value_parent) {
             $total_number_of_modules[] = count($value_parent['options']);
         }
-        die;
         return rest_ensure_response(array_sum($total_number_of_modules));
     }
 
@@ -4397,8 +4396,8 @@ class MVX_REST_API {
         $orders_overview = apply_filters('mvx_report_admin_overview_orders_overview', $qry->get_posts());
         $sales_data_chart = array();
          if ( !empty( $orders_overview ) ) {
-            foreach ( $orders_overview as $order_obj ) {
-                $order = wc_get_order($order_obj->ID);
+            foreach ( $orders_overview as $order ) {
+                // $order = wc_get_order($order_obj->ID);
                 $date = date_create($order->order_date);
                 $sales_data_chart[] = array(
                     'name'  =>  date_format($date,"d M"),
@@ -4406,7 +4405,7 @@ class MVX_REST_API {
                 );
                 
                 $overview_sales += $order->get_subtotal();
-                $mvx_suborders = get_mvx_suborders($order_obj->ID);
+                $mvx_suborders = get_mvx_suborders($order);
                 if (!empty($mvx_suborders)) {
                     foreach ($mvx_suborders as $suborder) {
                         $vendor_order = mvx_get_order($suborder->get_id());
@@ -4542,9 +4541,9 @@ class MVX_REST_API {
 
         if (!empty($overview_orders_product)) {
             $pro_total = $vendor_total = array();
-            foreach ($overview_orders_product as $order_obj) {
+            foreach ($overview_orders_product as $order) {
                 try {
-                    $order = wc_get_order($order_obj->ID);
+                    // $order = wc_get_order($order_obj->ID);
                     if ($order) :
                         
                         $date = date_create($order->order_date);
@@ -4567,7 +4566,7 @@ class MVX_REST_API {
                                 $total_sales[$item->get_product_id()]['product_id'] = $item->get_product_id();
                                 $total_sales[$item->get_product_id()]['total_sales'] = $pro_total[$item->get_product_id()];
                                 $total_sales[$item->get_product_id()]['quantities'] = $item->get_quantity();
-                                $total_sales[$item->get_product_id()]['order_id'] = $order_obj->ID;
+                                $total_sales[$item->get_product_id()]['order_id'] = $order->get_id();
 
                                 $total_sales[$item->get_product_id()]['details'][] = array(
                                     'date'  =>  date_format($date,"d M"),
@@ -4695,9 +4694,9 @@ class MVX_REST_API {
                 $orders = apply_filters('mvx_filter_orders_report_vendor', $qry->get_posts());
 
                 if ( !empty( $orders ) ) {
-                    foreach ( $orders as $order_obj ) {
+                    foreach ( $orders as $order ) {
                         try {
-                            $order = wc_get_order($order_obj->ID);
+                            // $order = wc_get_order($order_obj->ID);
                             if ($order) :
 
                                 $date = date_create($order->order_date);
@@ -4712,7 +4711,7 @@ class MVX_REST_API {
                                     'Net Sales'  => $order->get_total( 'edit' ),
                                 );
 
-                                $total_number_orders[] = $order_obj->ID;
+                                $total_number_orders[] = $order->get_id();
                                 $vendor_order = mvx_get_order($order->get_id());
                                 $gross_sales += $order->get_total( 'edit' );
                                 $vendor_earning += $vendor_order->get_commission_total('edit');

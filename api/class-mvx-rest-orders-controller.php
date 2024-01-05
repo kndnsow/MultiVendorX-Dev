@@ -56,4 +56,3 @@ function enable_vendor_on_list_shop_order_query($args, $request) {
 	}
 	return $args;
 }
-

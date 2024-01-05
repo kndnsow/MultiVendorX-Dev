@@ -1064,16 +1064,14 @@ class MVX_Frontend {
             $order = wc_get_order($order_id);
             if ( ! empty( $_POST['mvx_user_location'] ) ) {
                 $order->update_meta_data('_mvx_user_location', sanitize_text_field( $_POST['mvx_user_location'] ) );
-                $order->save();
             }
             if ( ! empty( $_POST['mvx_user_location_lat'] ) ) {
                 $order->update_meta_data('_mvx_user_location_lat', sanitize_text_field( $_POST['mvx_user_location_lat'] ) );
-                $order->save();
             }
             if ( ! empty( $_POST['mvx_user_location_lng'] ) ) {
                 $order->update_meta_data('_mvx_user_location_lng', sanitize_text_field( $_POST['mvx_user_location_lng'] ) );
-                $order->save();
             }
+            $order->save();
         }
     }
 

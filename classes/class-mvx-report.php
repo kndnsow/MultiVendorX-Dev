@@ -393,10 +393,10 @@ class MVX_Report {
      */
     public function filter_orders_report_overview($orders) {
     	if($orders) {
-	        foreach ($orders as $order_key => $order) {
+	        foreach ($orders as $order) {
 	            $vendor_item = false;
-	            $order_obj = new WC_Order($order->ID);
-	            $items = $order_obj->get_items('line_item');
+	            // $order_obj = new WC_Order($order->get_id());
+	            $items = $order->get_items('line_item');
 	            foreach ($items as $item_id => $item) {
 	                $product_id = wc_get_order_item_meta($item_id, '_product_id', true);
 	                $vendor_id = wc_get_order_item_meta($item_id, '_vendor_id', true);
@@ -422,7 +422,7 @@ class MVX_Report {
 	                }
 	            }
 	            if (!$vendor_item)
-	                unset($orders[$order_key]);
+	                unset($order);
 	        }
 	    }
         return $orders;

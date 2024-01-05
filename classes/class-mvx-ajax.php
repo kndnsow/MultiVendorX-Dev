@@ -216,17 +216,27 @@ class MVX_Ajax {
             // 'author' => $vendor->id,
             'post_status' => 'any',
             'date_query' => array(
+                        'inclusive' => true,
+                        'after' => array(
+                            'year' => date('Y', $date_start),
+                            'month' => date('n', $date_start),
+                            'day' => date('j', $date_start),
+                        ),
+                        'before' => array(
+                            'year' => date('Y', $date_end),
+                            'month' => date('n', $date_end),
+                            'day' => date('j', $date_end),
+                        ),
+                    ),
+            'meta_query' => array(
                 array(
-                    'after'     => $start_date,
-                    'before'    => $end_date,
-                    'inclusive' => true,
+                    'key' => '_vendor_id',
+                    'value' => $vendor->id,
+                    'compare' => '=',
                 ),
             ),
-            'meta_key' => '_vendor_id',
-            'meta_value' => $vendor->id,
         );
         $vendor_all_orders = apply_filters('mvx_datatable_get_vendor_all_orders', mvx_get_orders($args), $requestData, $_POST);
-        
         $filterActionData = array();
         parse_str($requestData['orders_filter_action'], $filterActionData);
         do_action('mvx_before_orders_list_query_bind', $filterActionData, $requestData, $vendor_all_orders);
@@ -264,7 +274,6 @@ class MVX_Ajax {
                 }
                 // filter order for rwquest refund
                 if( $filterActionData['order_status'] == 'request_refund') {
-                    $vendor_all_orders = mvx_get_orders($args);
                     foreach ($vendor_all_orders as $key_refund => $value_refund) {
                         $refund_order = wc_get_order($value_refund);
                         $cust_refund_status = $refund_order->get_meta('_customer_refund_order', true ) ? $refund_order->get_meta('_customer_refund_order', true ) : '';
@@ -290,7 +299,7 @@ class MVX_Ajax {
         foreach ($vendor_orders as $order_id) {
             $order = wc_get_order($order_id);
             $vendor_order = mvx_get_order($order_id);
-            if ($order) {
+            if ($order && $vendor_order) {
                 if(in_array($order->get_status(), array('draft', 'trash'))) continue;
                 $actions = array();
                 $is_shipped = (array) $order->get_meta('dc_pv_shipped', true);

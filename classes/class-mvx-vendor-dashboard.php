@@ -3022,7 +3022,7 @@ Class MVX_Admin_Dashboard {
                         wp_update_comment(array('comment_ID' => $comment_id_parent, 'comment_author' => $user_info->user_name, 'comment_author_email' => $user_info->user_email));
 
                         $mail = WC()->mailer()->emails['WC_Email_Customer_Refund_Request'];
-                        $billing_email = $order->get_meta( '_billing_email', true );
+                        $billing_email = $order->get_billing_email();
                         $mail->trigger( $billing_email, $vendor_order_id, $refund_details, 'customer' );
                     }
                 }

@@ -4098,3 +4098,85 @@ font-weight: 500;
     box-shadow: 0.25rem 0.25rem 1.5rem rgb(227 80 71 / 50%);
   }
 }
+table.mvx-shipping-zone-methods {
+  position: relative;
+
+  td {
+    display: table-cell;
+  }
+
+  td:has(>button) {
+    position: absolute;
+    display: flex;
+    justify-content: end;
+    width: 100%;
+  }
+}
+
+.mvx-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.mvx-btn.btn-purple {
+  transition: all 0.3s ease;
+  border-radius: 0.25rem;
+  padding: 0.594rem 1rem;
+  cursor: pointer;
+  vertical-align: middle;
+  white-space: nowrap;
+  background-color: #65438f;
+  border: none;
+  color: #f9f8fb;
+}
+.mvx-page:has(.mvx-vendor-shipping) {
+
+  .MuiPaper-root {
+    max-height: fit-content !important;
+
+    h2 {
+      position: absolute !important;
+      top: 0;
+      width: 100%;
+      background: #f9f8fb;
+      left: 0;
+      padding: 1rem 2rem 0 !important;
+    }
+
+    .MuiDialogContent-root {
+      padding: 5rem 0 3rem !important;
+      min-height: 320px;
+
+      p {
+        margin-bottom: 10px;
+      }
+
+      .shipping_method.css-b62m3t-container {
+        width: 65%;
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    .MuiDialogActions-root.MuiDialogActions-spacing {
+      padding: 1rem 2rem;
+      position: absolute;
+      border-top: 0.06rem solid #ece8f1;
+      width: 100%;
+      left: 0;
+      bottom: 0;
+      background: #f9f8fb;
+
+      button.mvx-btn.btn-purple {
+        -webkit-transition: all 0.3s ease;
+        transition: all 0.3s ease;
+        border-radius: 0.25rem;
+        padding: 0.594rem 1rem;
+        cursor: pointer;
+        vertical-align: middle;
+        white-space: nowrap;
+        background-color: #65438f;
+        border: none;
+        color: #f9f8fb;
+      }
+    }
+  }
+}

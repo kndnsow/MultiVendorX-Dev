@@ -564,16 +564,26 @@ public function get_vendor_orders_by_product($vendor_term_id, $product_id, $star
         if ($product_id && $vendor_term_id) {
             $vendor_id = get_term_meta( $vendor_term_id, '_vendor_user_id', true );
             $args = array(
-                'author' => $vendor_id,
+                // 'author' => $vendor_id,
                 'post_status' => array( 'wc-processing', 'wc-completed' ),
+                'meta_quary' => array(
+                    'key' => '_vendor_id',
+                    'value' => $vendor_id,
+                )
             );
 
             if (!empty($start_date) && !empty($end_date)) {
                 $args['date_query'] = array(
-                    array(
-                        'after'     => $start_date,
-                        'before'    => $end_date,
-                        'inclusive' => true,
+                    'inclusive' => true,
+                    'after' => array(
+                        'year' => date('Y', $start_date),
+                        'month' => date('n', $start_date),
+                        'day' => date('j', $start_date), //date('1'),
+                    ),
+                    'before' => array(
+                        'year' => date('Y', $end_date),
+                        'month' => date('n', $end_date),
+                        'day' => date('j', $end_date),
                     ),
                 );
             }

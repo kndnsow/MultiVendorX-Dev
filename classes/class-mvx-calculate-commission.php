@@ -46,7 +46,6 @@ class MVX_Calculate_Commission {
         $processed = $vendor_order->get_meta('_commissions_processed', true);
         if (!$processed && apply_filters( 'wcmp_create_order_commissions_as_per_statuses', true, $vendor_order_id )) {
             //$commission_ids = get_post_meta($vendor_order_id, '_commission_ids', true) ? get_post_meta($vendor_order_id, '_commission_ids', true) : array();
-            // $vendor_id = $vendor_order->get_meta('_vendor_id', true);
 
             // create vendor commission
             $commission_id = MVX_Commission::create_commission($vendor_order);
@@ -228,7 +227,6 @@ class MVX_Calculate_Commission {
             if($refunds) :
                 foreach ( $refunds as $_refund_id => $commissions_refunded ) {
                     $comm_refunded_amt = $commissions_refunded_total = 0;
-                    $_refund_order = wc_get_order($_refund_id);
                     foreach ( $commissions_refunded as $commission_id => $data_amount ) {
                         $amount = array_sum($data_amount);
                         $commissions_refunded_total = $amount;
@@ -394,7 +392,6 @@ class MVX_Calculate_Commission {
                         if ($commission_id) {
                             $commission_ids[] = $commission_id;
                             $order->update_meta_data('_commission_ids', $commission_ids);
-                            $order->save();
                         }
                         $vendor_array[] = $vendor_obj->term_id;
                     }

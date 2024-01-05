@@ -415,6 +415,7 @@ class MVX_Admin {
                 'delete_user'  =>  __('Delete User Permanently', 'multivendorx'),
                 'delete_vendor'  =>  __('Delete Vendor Profile', 'multivendorx'),
                 'modal_button_text'  =>  __('Confirm', 'multivendorx'),
+                'back' => __('Back', 'multivendorx'),
             );
 
             $status_and_tools_string = array(
@@ -1472,7 +1473,6 @@ class MVX_Admin {
             $recalculate = apply_filters( 'mvx_regenerate_order_commissions_by_new_commission_rate', false, $order );
             // Calculate commission
             MVX_Commission::calculate_commission($commission_id, $order, $recalculate);
-            
             update_post_meta($commission_id, '_paid_status', 'unpaid');
 
             // add commission id with associated vendor order

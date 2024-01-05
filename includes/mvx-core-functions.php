@@ -8323,7 +8323,7 @@ if (!function_exists('mvxArrayToObject')) {
 }
 
 if(!function_exists('insert_mvx_vendor_order_data')){
-    function insert_mvx_vendor_order_data($data, $parent_order, $vendor_id) {
+    function insert_mvx_vendor_order_data($parent_order, $vendor_id) {
         //createing sub order on wc_orders table
         $order = new WC_Order();
         $meta = [
