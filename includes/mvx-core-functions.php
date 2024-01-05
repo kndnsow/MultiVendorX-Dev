@@ -3985,7 +3985,7 @@ if (!function_exists('get_mvx_available_payment_gateways')) {
         if (mvx_is_module_active('paypal-payout')) {
             $available_gateways['paypal_payout'] = __('PayPal Payout', 'multivendorx');
         }
-       
+
         if (mvx_is_module_active('stripe-connect')) {
             $available_gateways['stripe_masspay'] = __('Stripe Connect', 'multivendorx');
         }
