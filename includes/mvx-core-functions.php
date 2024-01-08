@@ -530,6 +530,27 @@ if (!function_exists('get_vendor_from_an_order')) {
 
 }
 
+if (!function_exists('get_vendor_id_by_order')) {
+
+    /**
+     * Get vendor from a order
+     * @param WC_Order $order or order id
+     * @return type
+     */
+    function get_vendor_id_by_order($order) {
+        $vendors = array();
+        if (!is_object($order)) {
+            $order = new WC_Order($order);
+        }
+        $sub_orders = $order->get_parent_id() == 0 ? get_mvx_suborders($order) : [$order];
+        foreach($sub_orders as $sub_order){
+            $vendors[] = $sub_order->get_meta('_vendor_id');
+        }
+        return $vendors;
+    }
+
+}
+
 if (!function_exists('mvx_action_links')) {
 
     /**
@@ -3978,6 +3999,10 @@ if (!function_exists('get_mvx_available_payment_gateways')) {
      */
     function get_mvx_available_payment_gateways() {
         $available_gateways = array();
+        if (mvx_is_module_active('paypal-marketplace')) {
+            $available_gateways['paypal_marketplace'] = __('PayPal Marketplace', 'multivendorx');
+        }
+
         if (mvx_is_module_active('paypal-masspay')) {
             $available_gateways['paypal_masspay'] = __('PayPal Masspay', 'multivendorx');
         }
@@ -3985,7 +4010,6 @@ if (!function_exists('get_mvx_available_payment_gateways')) {
         if (mvx_is_module_active('paypal-payout')) {
             $available_gateways['paypal_payout'] = __('PayPal Payout', 'multivendorx');
         }
-
         if (mvx_is_module_active('stripe-connect')) {
             $available_gateways['stripe_masspay'] = __('Stripe Connect', 'multivendorx');
         }
@@ -8378,4 +8402,38 @@ if(!function_exists('insert_mvx_vendor_order_data')){
 
         return $order->get_id();
     }
+}
+
+function mvx_get_random_string( $length = 8 ) {
+    // ensure a minimum length
+    if ( ! isset( $length ) || $length < 4 ) {
+        $length = 8;
+    }
+    // make length as even number
+    if ( $length % 2 !== 0 ) {
+        ++$length;
+    }
+    // get random bytes via available methods
+    $random_bytes = '';
+    if ( function_exists( 'random_bytes' ) ) {
+        try {
+            $random_bytes = random_bytes( $length / 2 );
+        } catch ( TypeError $e ) {
+            $random_bytes = '';
+        } catch ( Error $e ) {
+            $random_bytes = '';
+        } catch ( Exception $e ) {
+            $random_bytes = '';
+        }
+    }
+    // random_bytes failed, try another method
+    if ( empty( $random_bytes ) && function_exists( 'openssl_random_pseudo_bytes' ) ) {
+        $random_bytes = openssl_random_pseudo_bytes( $length / 2 );
+    }
+
+    if ( ! empty( $random_bytes ) ) {
+        return bin2hex( $random_bytes );
+    }
+    // builtin method failed, try manual method
+    return substr( str_shuffle( str_repeat( '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', wp_rand( 1, 10 ) ) ), 1, $length );
 }

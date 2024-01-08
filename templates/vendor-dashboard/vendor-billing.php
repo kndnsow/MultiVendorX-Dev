@@ -38,7 +38,8 @@ $multi_split_payment_options = $MVX->vendor_dashboard->is_multi_option_split_ena
                         </select>
                     </div>
                 </div>
-				<div class="payment-gateway payment-gateway-paypal_masspay payment-gateway-paypal_payout <?php echo apply_filters('mvx_vendor_paypal_email_container_class', ''); ?>">
+				<div class="payment-gateway payment-gateway-paypal_marketplace <?php echo apply_filters('mvx_vendor_paypal_marketplace_email_container_class', ''); ?>"></div>
+                <div class="payment-gateway payment-gateway-paypal_masspay payment-gateway-paypal_payout <?php echo apply_filters('mvx_vendor_paypal_email_container_class', ''); ?>">
                     <div class="form-group">
                         <label for="vendor_paypal_email" class="control-label col-sm-3 col-md-3"><?php _e('Paypal Email', 'multivendorx'); ?></label>
                         <div class="col-md-6 col-sm-9">

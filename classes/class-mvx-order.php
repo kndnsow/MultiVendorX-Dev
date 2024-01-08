@@ -141,8 +141,7 @@ class MVX_Order {
      */
     public function woocommerce_analytics_remove_suborder($order_id){
         global $wpdb;
-        $order = wc_get_order($order_id);
-        if ($order->get_parent_id()) {
+        if (wp_get_post_parent_id($order_id)) {
             $wpdb->delete( $wpdb->prefix.'wc_order_stats', array( 'order_id' => $order_id ) );
             \WC_Cache_Helper::get_transient_version( 'woocommerce_reports', true );
         }
@@ -231,7 +230,7 @@ class MVX_Order {
         if(!$object) return $recipient;
         $is_migrated_order = $object->get_meta('_order_migration', true);
         if($is_migrated_order) return false;
-        return $object instanceof WC_Order && $object->get_parent_id() ? false : $recipient;
+        return $object instanceof WC_Order && wp_get_post_parent_id( $object->get_id() ) ? false : $recipient;
     }
     
     public function woocommerce_email_disabled($enabled, $object ){
@@ -239,7 +238,7 @@ class MVX_Order {
         $is_vendor_order = ($object) ? mvx_get_order($object->get_id()) : false;
         $is_migrated_order = $object->get_meta('_order_migration', true);
         if($is_migrated_order) return false;
-        return $object instanceof WC_Order && $object->get_parent_id() && $is_vendor_order ? false : $enabled;
+        return $object instanceof WC_Order && wp_get_post_parent_id( $object->get_id() ) && $is_vendor_order ? false : $enabled;
     }
     
     public function woocommerce_email_enabled($enabled, $object ){
@@ -248,7 +247,7 @@ class MVX_Order {
         $is_migrated_order = $object->get_meta('_order_migration', true);
         if($is_migrated_order) return false;
         
-        if ( $object instanceof WC_Order && $object->get_parent_id() && $is_vendor_order ) return $enabled;
+        if ( $object instanceof WC_Order && wp_get_post_parent_id( $object->get_id() ) && $is_vendor_order ) return $enabled;
 
         return $enabled;
     }
@@ -308,7 +307,7 @@ class MVX_Order {
     public function mvx_create_orders($order_id, $posted_data, $order, $backend = false) {
         global $MVX;
         //check parent order exist
-        if ($order->get_parent_id() != 0)
+        if (wp_get_post_parent_id($order_id) != 0)
             return false;
 
         // $order = wc_get_order($order_id);
@@ -395,7 +394,7 @@ class MVX_Order {
         global $MVX;
         $items = $order->get_items();
         foreach ($items as $key => $value) {
-            if ( $order && $order->get_parent_id() == 0 || (function_exists('wcs_is_subscription') && wcs_is_subscription( $order )) ) {
+            if ( $order && wp_get_post_parent_id( $order->get_id() ) == 0 || (function_exists('wcs_is_subscription') && wcs_is_subscription( $order )) ) {
                 $general_cap = apply_filters('mvx_sold_by_text', __('Sold By', 'multivendorx'));
                 $vendor = get_mvx_product_vendors($value['product_id']);
                 if ($vendor) {
@@ -410,7 +409,7 @@ class MVX_Order {
 
     public function woocommerce_ajax_order_items_added( $added_items, $order ) {
         foreach ( $added_items as $item_id => $item_data ) {
-            $parent_order = wc_get_order( $order->get_parent_id() );
+            $parent_order = wc_get_order( wp_get_post_parent_id( $order->get_id() ) );
             $suborder_id = false;
             $suborders = get_mvx_suborders($order->get_id());
             if (!empty($suborders)) {
@@ -860,7 +859,7 @@ class MVX_Order {
         }    
         $status_to_sync = apply_filters('mvx_parent_order_to_vendor_order_statuses_to_sync',array('on-hold', 'pending', 'processing', 'cancelled', 'failed'));
         if( in_array($new_status, $status_to_sync) ) :
-            if ($order->get_parent_id() || $order->get_meta( 'mvx_vendor_order_status_synchronized', true))
+            if (wp_get_post_parent_id( $order_id ) || $order->get_meta( 'mvx_vendor_order_status_synchronized', true))
                 return false;
             
             remove_action( 'woocommerce_order_status_completed', 'wc_paying_customer' );
@@ -972,8 +971,8 @@ class MVX_Order {
      * @see woocommerce\includes\class-wc-ajax.php:2295
      */
     public function mvx_order_refunded($order_id, $parent_refund_id) {
-        $order = wc_get_order($order_id);
-        if ($order->get_parent_id()) { 
+        
+        if (!wp_get_post_parent_id($order_id)) { 
             $create_vendor_refund = false;
             $create_refund = true;
             $refund = false;
@@ -1088,8 +1087,8 @@ class MVX_Order {
         if (!current_user_can('edit_shop_orders')) {
             wp_die( -1 );
         }
-        $parent_order = wc_get_order($parent_order_id);
-        if (!$parent_order->get_parent_id()) {
+
+        if (!wp_get_post_parent_id($parent_order_id)) {
             global $wpdb;
             $child_refund_ids = $wpdb->get_col($wpdb->prepare("SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key=%s AND meta_value=%s", '_parent_refund_id', $refund_id));
 
@@ -1229,8 +1228,7 @@ class MVX_Order {
     }
     
     public function trash_mvx_suborder( $order_id ) {
-        $order = wc_get_order($order_id);
-        if ( $order->get_parent_id() == 0 ) {
+        if ( wp_get_post_parent_id( $order_id ) == 0 ) {
             $mvx_suborders = get_mvx_suborders($order_id);
             if ( $mvx_suborders ) {
                 foreach ( $mvx_suborders as $suborder ) {
@@ -1241,8 +1239,7 @@ class MVX_Order {
     }
     
     public function delete_mvx_suborder( $order_id ) {
-        $order = wc_get_order($order_id);
-        if ( $order->get_parent_id() == 0 ) {
+        if ( wp_get_post_parent_id( $order_id ) == 0 ) {
             $parent_order = wc_get_order($order_id);
             $mvx_suborders = get_mvx_suborders($order_id);
             if ( $mvx_suborders ) {
@@ -1421,7 +1418,7 @@ class MVX_Order {
     
     public function woocommerce_can_reduce_order_stock( $reduce_stock, $order ){
         $is_vendor_order = ( $order ) ? mvx_get_order( $order->get_id() ) : false;
-        return $order instanceof WC_Order &&  $order->get_parent_id() && $is_vendor_order ? false : $reduce_stock;
+        return $order instanceof WC_Order && wp_get_post_parent_id( $order->get_id() ) && $is_vendor_order ? false : $reduce_stock;
     }
     
     public function woocommerce_hidden_order_itemmeta( $itemmeta ) {
@@ -1455,7 +1452,7 @@ class MVX_Order {
             if( $commission_id ) wp_trash_post( $commission_id );
         }
         // stock increase when suborder mark as completed
-        if ($order->get_parent_id() && $new_status == 'completed') {
+        if (wp_get_post_parent_id($order_id) && $new_status == 'completed') {
             
             $items = $order->get_items();
             foreach ($items as $item_id => $item) {
@@ -1609,7 +1606,7 @@ class MVX_Order {
         wp_update_comment(array('comment_ID' => $comment_id, 'comment_author' => $user_info->user_name, 'comment_author_email' => $user_info->user_email));
 
         // parent order
-        $parent_order_id = $order->get_parent_id();
+        $parent_order_id = wp_get_post_parent_id($order->get_id());
         $parent_order = wc_get_order( $parent_order_id );
         $comment_id_parent = $parent_order->add_order_note( __('Customer requested a refund for ', 'multivendorx') .$order_id.'.'  );
         wp_update_comment(array('comment_ID' => $comment_id_parent, 'comment_author' => $user_info->user_name, 'comment_author_email' => $user_info->user_email));
@@ -1690,7 +1687,7 @@ class MVX_Order {
                 wp_update_comment(array('comment_ID' => $comment_id, 'comment_author' => $user_info->user_name, 'comment_author_email' => $user_info->user_email));
 
                 // Comment note for parent order
-                $parent_order_id = $order->get_parent_id();
+                $parent_order_id = wp_get_post_parent_id($post_id);
                 $parent_order = wc_get_order( $parent_order_id );
                 $comment_id_parent = $parent_order->add_order_note( __('Site admin ', 'multivendorx') . $order_status. __(' refund request for order #', 'multivendorx') . $post_id .'.' );
                 wp_update_comment(array('comment_ID' => $comment_id_parent, 'comment_author' => $user_info->user_name, 'comment_author_email' => $user_info->user_email));

@@ -3016,7 +3016,7 @@ Class MVX_Admin_Dashboard {
                         wp_update_comment(array('comment_ID' => $comment_id, 'comment_author' => $user_info->user_name, 'comment_author_email' => $user_info->user_email));
 
                         // Comment note for parent order
-                        $parent_order_id = $order->get_parent_id();
+                        $parent_order_id = wp_get_post_parent_id($vendor_order_id);
                         $parent_order = wc_get_order( $parent_order_id );
                         $comment_id_parent = $parent_order->add_order_note( __('Vendor ' , 'multivendorx') . $order_status . __(' refund request for order #' , 'multivendorx') . $vendor_order_id .'.' );
                         wp_update_comment(array('comment_ID' => $comment_id_parent, 'comment_author' => $user_info->user_name, 'comment_author_email' => $user_info->user_email));
@@ -3052,6 +3052,9 @@ Class MVX_Admin_Dashboard {
         $payment_methods = array();
         if ( mvx_is_module_active('paypal-marketplace') && array_key_exists('paypal_masspay', get_mvx_available_payment_gateways()) ) {
             $payment_methods[] = 'paypal_masspay';
+            $count++;
+        }if ( mvx_is_module_active('paypal-marketplace') && array_key_exists('paypal_marketplace', get_mvx_available_payment_gateways()) ) {
+            $payment_methods[] = 'paypal_marketplace';
             $count++;
         }
         if ( mvx_is_module_active('stripe-marketplace') && array_key_exists('stripe_masspay', get_mvx_available_payment_gateways()) ) {
