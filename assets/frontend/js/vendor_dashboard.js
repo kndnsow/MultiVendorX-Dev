@@ -122,7 +122,7 @@ jQuery( document ).ready( function ( $ ) {
                 proid         : $(this).data('proid'),
                 trid          : $(this).data('trid'),
                 source_lang   : $(this).data('source_lang'),
-                lang          : $(this).data('lang'),
+                language      : $(this).data('lang'),
                 security      : mvx_advance_product_params.dashboard_nonce
             }   
             $.ajax({
