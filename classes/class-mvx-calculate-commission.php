@@ -742,7 +742,7 @@ class MVX_Calculate_Commission {
                             return array('commission_val' => $category_wise_commission);
                         }
                         $vendor_commission = get_user_meta($vendor->id, '_vendor_commission', true);
-                        if ($vendor_commission) {
+                        if (strlen($vendor_commission) > 0) {
                             $vendor_commission = $vendor_commission == 0 ? 0 : $vendor_commission;
                             return array('commission_val' => $vendor_commission); // Use vendor user commission percentage 
                         } else {

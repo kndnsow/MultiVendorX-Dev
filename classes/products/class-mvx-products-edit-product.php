@@ -337,6 +337,7 @@ class MVX_Products_Edit_Product {
                 'variations_per_page'                 => absint( apply_filters( 'woocommerce_admin_meta_boxes_variations_per_page', 15 ) ),
                 'mon_decimal_point'                   => wc_get_price_decimal_separator(),
                 'add_tags'                            => apply_filters( 'mvx_vendor_can_add_product_tag', true, get_current_vendor_id() ),
+                'dashboard_nonce'                     => wp_create_nonce('mvx-dashboard'),
                 ) );
             wp_localize_script( 'mvx-advance-product', 'mvx_advance_product_params', $edit_product_params );
             wp_enqueue_script( 'mvx-advance-product' );

@@ -3571,108 +3571,27 @@ class MVX_Ajax {
     function wpml_mvx_product_new_translation() {
         global $sitepress, $_POST, $wpdb;
         check_ajax_referer('mvx-dashboard', 'security');
-        if( isset( $_POST['proid'] ) && !empty( $_POST['proid'] ) ) {
+        if (isset($_POST['proid']) && !empty($_POST['proid'])) {
             $product_id = absint($_POST['proid']);
-            if( $product_id ) {
-                if( isset( $_POST['lang'] ) && !empty( $_POST['lang'] ) ) {
-                    $lang_code = $_POST['lang'];
-                    if( $lang_code ) {
-                        $product = wc_get_product( $product_id );
-                        if ( false === $product ) {
-                            /* translators: %s: product id */
-                            echo '{"status": false, "message": "' . sprintf( __( 'Product creation failed, could not find original product: %s', 'multivendorx' ), $product_id ) . '" }';
-                        }
-
-                        if( !class_exists( 'WC_Admin_Duplicate_Product' ) ) {
-                            include( WC_ABSPATH . 'includes/admin/class-wc-admin-duplicate-product.php' );
-                        }
-                        $WC_Admin_Duplicate_Product = new WC_Admin_Duplicate_Product();
-                        $duplicate = $WC_Admin_Duplicate_Product->product_duplicate( $product );
-
-                        $vendor_id = get_mvx_product_vendors( $product_id ); 
-                        if( !$vendor_id ) {
-                            $vendor_id = apply_filters( 'mvx_current_vendor_id', get_current_user_id() );
-                        }
-
-                        // Update translated post to sete title/content empty
-                        $my_post = apply_filters( 'mvx_translated_product_content_before_save', array(
-                            'ID'           => $duplicate->get_id(),
-                            'post_title'   => get_the_title( $product_id ) . ' (' . $lang_code . ' copy)',
-                            'post_author'  => $vendor_id->id,
-                            'post_content' => '',
-                            'post_excerpt' => '',
-                        ), $product_id );
-                        wp_update_post( $my_post );
-
-                        $source_lang = $_POST['source_lang'];
-                        $dest_lang   = $_POST['lang'];
-                        $trid        = $_POST['trid'];
-
-                        // Connect Translations
-                        $original_element_language = $sitepress->get_default_language();
-                        $trid_elements             = $sitepress->get_element_translations( $trid, 'post_product' );
-                        if($trid_elements) {
-                            foreach ( $trid_elements as $trid_element ) {
-                                if ( $trid_element->original ) {
-                                    $original_element_language = $trid_element->language_code;
-                                    break;
-                                }
-                            }
-                        }
-                        $wpdb->update(
-                            $wpdb->prefix . 'icl_translations',
-                            array( 'source_language_code' => $original_element_language, 'trid' => $trid ),
-                            array( 'element_id' => $duplicate->get_id(), 'element_type' => 'post_product' ),
-                            array( '%s', '%d', '%s' ),
-                            array( '%d', '%s' )
+            $mark_as_duplicate = false;
+            if ($product_id) {
+                if (isset($_POST['language']) && !empty($_POST['language'])) {
+                    $lang_code = $_POST['language'];
+                    if ($lang_code) {
+                        // Creates the duplicated post
+                        $duplicate_post_id = apply_filters(
+                            'wpml_copy_post_to_language',
+                            $product_id,
+                            $lang_code,
+                            $mark_as_duplicate
                         );
 
-                        do_action(
-                            'wpml_translation_update',
-                            array(
-                                'type' => 'update',
-                                'trid' => $trid,
-                                'element_id' => $duplicate->get_id(),
-                                'element_type' => 'post_product',
-                                'context' => 'post'
-                            )
-                        );
-
-                        // Product Custom Taxonomies - 6.0.3
-                        $product_taxonomies = get_object_taxonomies( 'product', 'objects' );
-                        if( !empty( $product_taxonomies ) ) {
-                            foreach( $product_taxonomies as $product_taxonomy ) {
-                                if( !in_array( $product_taxonomy->name, array( 'product_cat', 'product_tag', 'wcpv_product_vendors' ) ) ) {
-                                    if( $product_taxonomy->public && $product_taxonomy->show_ui && $product_taxonomy->meta_box_cb && $product_taxonomy->hierarchical ) {
-                                        $taxonomy_values = get_the_terms( $product->get_id(), $product_taxonomy->name );
-                                        $is_translated = $sitepress->is_translated_taxonomy( $product_taxonomy );
-                                        $is_first = true;
-                                        if( !empty($taxonomy_values) ) {
-                                            foreach($taxonomy_values as $pkey => $ptaxonomy) {
-                                                if( $is_translated ) {
-                                                    $term_id = apply_filters( 'translate_object_id', (int)$ptaxonomy->term_id, $product_taxonomy->name, false, $dest_lang );
-                                                } else {
-                                                    $term_id = (int)$ptaxonomy->term_id;
-                                                }
-                                                if($is_first) {
-                                                    $is_first = false;
-                                                    wp_set_object_terms( $duplicate->get_id(), $term_id, $product_taxonomy->name );
-                                                } else {
-                                                    wp_set_object_terms( $duplicate->get_id(), $term_id, $product_taxonomy->name, true );
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                        if (!$mark_as_duplicate && $duplicate_post_id) {
+                             do_action('mvx_after_translated_new_product', $duplicate_post_id);
+                            $product_url = esc_url(mvx_get_vendor_dashboard_endpoint_url(get_mvx_vendor_settings('mvx_edit_product_endpoint', 'seller_dashbaord', 'edit-product'), $duplicate_post_id));
+                            // Redirect to the edit screen for the new draft page
+                            echo '{"status": true, "redirect": "' . $product_url . '", "id": "' . $duplicate_post_id . '"}';
                         }
-
-                        do_action( 'mvx_after_translated_new_product', $duplicate->get_id() );
-
-                        $product_url = esc_url(mvx_get_vendor_dashboard_endpoint_url(get_mvx_vendor_settings('mvx_edit_product_endpoint', 'seller_dashbaord', 'edit-product'), $duplicate->get_id()));
-
-                        // Redirect to the edit screen for the new draft page
-                        echo '{"status": true, "redirect": "' . $product_url . '", "id": "' . $duplicate->get_id() . '"}';
                     }
                 }
             }

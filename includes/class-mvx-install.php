@@ -114,11 +114,16 @@ class MVX_Install {
     function mvx_product_vendor_plugin_create_pages() {
 
         // MVX Plugin pages
-        $is_trash = wp_trash_post(mvx_get_option('mvx_product_vendor_vendor_dashboard_page_id'));
-        if ($is_trash) {
-            delete_option('mvx_product_vendor_vendor_dashboard_page_id');
-            delete_option('mvx_product_vendor_vendor_page_id');
+        $dashboard_page_id = mvx_get_option('mvx_product_vendor_vendor_dashboard_page_id');
+
+        if (!empty($dashboard_page_id)) {
+            $is_trash = wp_trash_post($dashboard_page_id);
+            if ($is_trash) {
+                delete_option('mvx_product_vendor_vendor_dashboard_page_id');
+                delete_option('mvx_product_vendor_vendor_page_id');
+            }
         }
+        
         $this->mvx_product_vendor_plugin_create_page(esc_sql(_x('dashboard', 'page_slug', 'multivendorx')), 'mvx_product_vendor_vendor_page_id', __('Vendor Dashboard', 'multivendorx'), '[mvx_vendor]');
         $this->mvx_product_vendor_plugin_create_page(esc_sql(_x('vendor-registration', 'page_slug', 'multivendorx')), 'mvx_product_vendor_registration_page_id', __('Vendor Registration', 'multivendorx'), '[vendor_registration]');
         $mvx_product_vendor_vendor_page_id = mvx_get_option('mvx_product_vendor_vendor_page_id');
